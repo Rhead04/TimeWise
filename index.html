@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Timewise — time-aware to-do</title>
+<style>
+  :root {
+    --bg: #1C1B1A;
+    --bg-raised: #262422;
+    --bg-card: #322F2C;
+    --text: #FFFFFF;
+    --text-dim: #C2BDB5;
+    --text-faint: #918C84;
+    --amber: #F2A45C;
+    --amber-dim: #4A3A28;
+    --sage: #93C2A4;
+    --sage-dim: #2A3A30;
+    --red: #E37861;
+    --red-dim: #4A2B26;
+    --line: #46433C;
+    --radius: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .screen {
+    display: none;
+    padding: 0 20px 100px;
+    min-height: 100vh;
+  }
+  .screen.active { display: block; }
+
+  /* ---- Header (sticky so it stays visible while the timeline scrolls) ---- */
+  .header-wrap {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    padding: 24px 0 14px;
+    z-index: 8;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .header .date {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+
+  .day-stats {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 6px 12px;
+  }
+  .stat-pill-risk {
+    color: var(--red);
+    border-color: var(--red);
+    background: var(--red-dim);
+  }
+
+  /* ---- Timeline ---- */
+  .timeline {
+    position: relative;
+    padding-left: 52px;
+  }
+  .hour-row {
+    position: relative;
+    border-top: 1px solid var(--line);
+  }
+  .hour-row:first-child { border-top: none; }
+  .hour-label {
+    position: absolute;
+    left: -52px;
+    top: -7px;
+    width: 40px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .task-block {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    border-radius: 10px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 6;
+  }
+  .task-block:active { transform: scale(0.98); }
+
+  .task-block.planned {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+  }
+  .task-block.active {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber);
+    box-shadow: 0 0 0 1px var(--amber) inset;
+  }
+  .task-block.done {
+    background: var(--sage-dim);
+    border: 1px solid var(--sage);
+    opacity: 0.7;
+  }
+  .task-block.overrun {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(214, 97, 74, 0); }
+    50% { box-shadow: 0 0 0 4px rgba(214, 97, 74, 0.15); }
+  }
+
+  .task-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .task-time {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .task-icon { font-size: 13px; margin-right: 4px; }
+
+  .now-line {
+    position: absolute;
+    left: -52px;
+    right: 0;
+    height: 2px;
+    background: var(--amber);
+    z-index: 5;
+    box-shadow: 0 0 6px rgba(242, 164, 92, 0.5);
+  }
+  .now-line::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px rgba(242, 164, 92, 0.7);
+  }
+  .now-label {
+    position: absolute;
+    left: 14px;
+    top: -10px;
+    font-size: 11px;
+    color: var(--bg);
+    background: var(--amber);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* ---- Unscheduled section ---- */
+  .unscheduled {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  .section-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .unscheduled-item {
+    background: var(--bg-raised);
+    border: 1px solid var(--red);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .risk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    margin-top: 5px;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(227, 120, 97, 0.6);
+  }
+  .unscheduled-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .unscheduled-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* ---- FAB ---- */
+  .fab {
+    position: fixed;
+    bottom: 28px;
+    right: calc(50% - 210px + 20px);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--amber);
+    color: var(--bg);
+    border: none;
+    font-size: 28px;
+    font-weight: 400;
+    box-shadow: 0 6px 20px rgba(232, 149, 74, 0.4);
+    cursor: pointer;
+    z-index: 20;
+  }
+  @media (max-width: 420px) {
+    .fab { right: 20px; }
+  }
+
+  .demo-fast-forward {
+    position: fixed;
+    bottom: 92px;
+    right: calc(50% - 210px + 20px);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 20;
+  }
+  @media (max-width: 420px) {
+    .demo-fast-forward { right: 20px; }
+  }
+
+  /* ---- Modal screens (Add task, Conflict, Summary) ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 30;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .modal-overlay.active { display: block; }
+  .modal-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-raised);
+    border-radius: 20px 20px 0 0;
+    padding: 28px 20px 32px;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--text-faint);
+    border-radius: 4px;
+    margin: 0 auto 20px;
+  }
+  .modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .modal-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+
+  .field { margin-bottom: 20px; }
+  .field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .field-hint {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 5px;
+  }
+  input[type="text"], select {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+  }
+  input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--amber);
+  }
+
+  .duration-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .duration-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+  }
+  .duration-chip.selected {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--amber);
+    color: var(--bg);
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .btn-secondary {
+    width: 100%;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .btn-danger-outline {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* Conflict modal specific */
+  .conflict-icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+  }
+  .conflict-stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .conflict-stat-row .val {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .impact-box {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+
+  /* Summary screen */
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 16px 8px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 24px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .history-row .name { font-size: 14px; }
+  .history-row .delta {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .delta.over { color: var(--red); }
+  .delta.under { color: var(--sage); }
+  .insight-box {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber);
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .insight-box b { color: var(--amber); }
+
+  .nav-tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 420px;
+    margin: 0 auto;
+    background: var(--bg-raised);
+    border-top: 1px solid var(--line);
+    display: flex;
+    z-index: 15;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-tab {
+    flex: 1;
+    text-align: center;
+    padding: 14px 0 10px;
+    font-size: 11px;
+    color: var(--text-faint);
+    cursor: pointer;
+  }
+  .nav-tab.active { color: var(--amber); }
+  .nav-tab .icon { font-size: 18px; display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+  <!-- ============ SCREEN 1: TODAY ============ -->
+  <div class="screen active" id="screen-today">
+    <div class="header-wrap">
+      <div class="header">
+        <h1>Today</h1>
+        <span class="date" id="today-date"></span>
+      </div>
+      <div class="subtitle">Tasks live on the clock, not just on a list.</div>
+      <div class="day-stats" id="day-stats"></div>
+    </div>
+
+    <div class="timeline" id="timeline"></div>
+
+    <div class="unscheduled" id="unscheduled-section" style="display:none;">
+      <div class="section-label">⚠ Needs a time estimate</div>
+      <div id="unscheduled-list"></div>
+    </div>
+  </div>
+
+  <button class="fab" onclick="openAddTask()">+</button>
+  <button class="demo-fast-forward" onclick="simulateTimePassing(30)" title="Demo only: fast-forward 30 min">⏩ +30m</button>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" id="tab-today" onclick="showScreen('today')">
+      <span class="icon">📅</span>Today
+    </div>
+    <div class="nav-tab" id="tab-summary" onclick="showSummary()">
+      <span class="icon">📊</span>Summary
+    </div>
+  </div>
+
+  <!-- ============ MODAL: ADD TASK ============ -->
+  <div class="modal-overlay" id="modal-add">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">New task</div>
+      <div class="modal-sub">Every task gets a place in your day, not just a deadline.</div>
+
+      <div class="field">
+        <label class="field-label">What do you need to do?</label>
+        <input type="text" id="input-title" placeholder="e.g. Programming lab assignment">
+      </div>
+
+      <div class="field">
+        <label class="field-label">Estimated time needed</label>
+        <div class="duration-grid" id="duration-grid">
+          <div class="duration-chip" data-min="30">30m</div>
+          <div class="duration-chip selected" data-min="60">1h</div>
+          <div class="duration-chip" data-min="120">2h</div>
+          <div class="duration-chip" data-min="180">3h</div>
+        </div>
+        <div class="field-hint">How long you're blocking off — not a guess about everything that could go wrong.</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Start time</label>
+        <select id="input-start">
+        </select>
+      </div>
+
+      <button class="btn-primary" onclick="saveTask()">Add to today</button>
+      <button class="btn-secondary" onclick="closeModal('modal-add')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: TASK DETAIL / START-STOP ============ -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal-sheet" id="detail-content">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- ============ MODAL: OVERRUN CONFLICT ============ -->
+  <div class="modal-overlay" id="modal-conflict">
+    <div class="modal-sheet" id="conflict-content">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- ============ MODAL: END OF DAY SUMMARY ============ -->
+  <div class="modal-overlay" id="modal-summary">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">End of day</div>
+      <div class="modal-sub" id="summary-date"></div>
+
+      <div class="summary-stats" id="summary-stats"></div>
+
+      <div class="section-label">Plan vs. reality</div>
+      <div id="summary-history"></div>
+
+      <div class="insight-box" id="summary-insight"></div>
+
+      <button class="btn-secondary" onclick="closeModal('modal-summary')">Close</button>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+let tasks = []; // {id, title, durationMin, startMin (minutes from midnight), status: 'planned'|'active'|'done'|'overrun', startedAt (timestamp), endedAt}
+let history = []; // {title, planned, actual} — in-memory only, resets on reload
+
+let taskIdCounter = 1;
+let nowOffsetMin = 0; // for demo: lets us simulate time passing
+
+const DAY_START = 7 * 60;  // 07:00
+const DAY_END = 22 * 60;   // 22:00
+
+/* ============================================================
+   SEED DATA — mirrors the storyboard scenario
+   ============================================================ */
+function seedDemoData() {
+  const now = getNowMin();
+  tasks = [
+    { id: 1, title: '📘 HCI Lecture', durationMin: 120, startMin: 9 * 60, status: 'done', startedAt: null, endedAt: null },
+    { id: 2, title: '💻 Programming lab assignment', durationMin: 120, startMin: 14 * 60, status: 'planned', startedAt: null, endedAt: null },
+    { id: 3, title: '👥 Team meeting', durationMin: 60, startMin: 19 * 60, status: 'planned', startedAt: null, endedAt: null },
+  ];
+  taskIdCounter = 4;
+  // unscheduled
+  tasks.push({ id: 0, title: 'Read lecture notes', durationMin: null, startMin: null, status: 'unscheduled' });
+}
+
+function getNowMin() {
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes() + nowOffsetMin;
+}
+
+/* ============================================================
+   NON-LINEAR TIME SCALE — compresses empty hours, expands busy ones
+   ============================================================ */
+const HOUR_FULL_PX = 56;   // height for an hour that contains a task
+const HOUR_EMPTY_PX = 22;  // height for an hour with nothing scheduled
+
+function hourHasTask(hourStart) {
+  const hourEnd = hourStart + 60;
+  return tasks.some(t =>
+    t.status !== 'unscheduled' &&
+    t.startMin < hourEnd &&
+    (t.startMin + t.durationMin) > hourStart
+  );
+}
+
+// Returns the pixel-Y for a given clock-minute, walking the compressed scale
+function minuteToY(targetMin) {
+  let y = 0;
+  for (let h = DAY_START; h < DAY_END; h += 60) {
+    const rowH = hourHasTask(h) ? HOUR_FULL_PX : HOUR_EMPTY_PX;
+    if (targetMin <= h) return y;
+    if (targetMin < h + 60) {
+      const frac = (targetMin - h) / 60;
+      return y + frac * rowH;
+    }
+    y += rowH;
+  }
+  return y;
+}
+
+function totalTimelineHeight() {
+  return minuteToY(DAY_END);
+}
+
+function updateDayStats() {
+  const el = document.getElementById('day-stats');
+  if (!el) return;
+
+  const scheduled = tasks.filter(t => t.status !== 'unscheduled' && t.status !== 'done');
+  const now = getNowMin();
+  const dayLengthMin = DAY_END - DAY_START;
+  const elapsedMin = Math.max(0, Math.min(now, DAY_END) - DAY_START);
+  const remainingDayMin = Math.max(0, dayLengthMin - elapsedMin);
+  const busyRemainingMin = scheduled
+    .filter(t => t.startMin + t.durationMin > now)
+    .reduce((s, t) => s + Math.min(t.durationMin, (t.startMin + t.durationMin) - Math.max(t.startMin, now)), 0);
+  const freeMin = Math.max(0, remainingDayMin - busyRemainingMin);
+
+  const freeHours = Math.floor(freeMin / 60);
+  const freeMinsRem = Math.round(freeMin % 60);
+  const freeStr = freeHours > 0
+    ? `${freeHours}h${freeMinsRem > 0 ? ' ' + freeMinsRem + 'm' : ''} free today`
+    : `${freeMinsRem}m free today`;
+
+  const unscheduledCount = tasks.filter(t => t.status === 'unscheduled').length;
+  const unschedStr = unscheduledCount > 0
+    ? `${unscheduledCount} task${unscheduledCount > 1 ? 's' : ''} unscheduled`
+    : 'All tasks have a time slot';
+
+  el.innerHTML = `
+    <span class="stat-pill">${freeStr}</span>
+    <span class="stat-pill ${unscheduledCount > 0 ? 'stat-pill-risk' : ''}">${unschedStr}</span>
+  `;
+}
+
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+  container.innerHTML = '';
+  const now = getNowMin();
+
+  for (let h = DAY_START; h < DAY_END; h += 60) {
+    const row = document.createElement('div');
+    row.className = 'hour-row';
+    const rowH = hourHasTask(h) ? HOUR_FULL_PX : HOUR_EMPTY_PX;
+    row.style.height = rowH + 'px';
+    const label = document.createElement('div');
+    label.className = 'hour-label';
+    label.textContent = formatHour(h / 60);
+    row.appendChild(label);
+    container.appendChild(row);
+  }
+  container.style.position = 'relative';
+
+  // now line
+  if (now >= DAY_START && now <= DAY_END) {
+    const nowLine = document.createElement('div');
+    nowLine.className = 'now-line';
+    nowLine.style.top = minuteToY(now) + 'px';
+    const nowLabel = document.createElement('div');
+    nowLabel.className = 'now-label';
+    nowLabel.textContent = 'Now · ' + formatTime(now);
+    nowLine.appendChild(nowLabel);
+    container.appendChild(nowLine);
+  }
+
+  // task blocks
+  tasks.filter(t => t.status !== 'unscheduled').forEach(t => {
+    const block = document.createElement('div');
+    let effectiveDuration = t.durationMin;
+    let cls = 'task-block ' + t.status;
+
+    if (t.status === 'active' || t.status === 'overrun') {
+      const elapsed = now - t.startMin;
+      effectiveDuration = Math.max(t.durationMin, elapsed);
+      if (elapsed > t.durationMin) cls = 'task-block overrun';
+    }
+
+    const topY = minuteToY(t.startMin);
+    const bottomY = minuteToY(t.startMin + effectiveDuration);
+
+    block.className = cls;
+    block.style.top = (topY + 4) + 'px';
+    block.style.height = Math.max(bottomY - topY - 8, 36) + 'px';
+    block.onclick = () => openDetail(t.id);
+
+    block.innerHTML = `
+      <div class="task-title">${t.title}</div>
+      <div class="task-time">${formatTime(t.startMin)}–${formatTime(t.startMin + t.durationMin)}${t.status==='overrun' ? ' ⚠ running over' : ''}${t.status==='done' ? ' ✓' : ''}</div>
+    `;
+    container.appendChild(block);
+  });
+
+  // unscheduled section
+  const unsched = tasks.filter(t => t.status === 'unscheduled');
+  const section = document.getElementById('unscheduled-section');
+  const list = document.getElementById('unscheduled-list');
+  if (unsched.length > 0) {
+    section.style.display = 'block';
+    list.innerHTML = unsched.map(t => `
+      <div class="unscheduled-item" onclick="openAddTask('${t.title}')">
+        <span class="risk-dot"></span>
+        <div>
+          <div class="unscheduled-title">${t.title}</div>
+          <div class="unscheduled-sub">No time blocked — tap to estimate &amp; schedule</div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    section.style.display = 'none';
+  }
+
+  updateDayStats();
+  checkForOverruns();
+}
+
+function formatHour(h) {
+  return (h % 12 === 0 ? 12 : h % 12) + (h < 12 ? 'am' : 'pm');
+}
+function formatTime(min) {
+  const h = Math.floor(min / 60) % 24;
+  const m = min % 60;
+  const hh = (h % 12 === 0 ? 12 : h % 12);
+  const ampm = h < 12 ? 'am' : 'pm';
+  return `${hh}:${m.toString().padStart(2,'0')}${ampm}`;
+}
+
+/* ============================================================
+   OVERRUN DETECTION — the mechanism the testers flagged as missing
+   ============================================================ */
+function checkForOverruns() {
+  const now = getNowMin();
+  tasks.forEach(t => {
+    if (t.status === 'active') {
+      const elapsed = now - t.startMin;
+      if (elapsed > t.durationMin) {
+        t.status = 'overrun';
+      }
+    }
+  });
+}
+
+function findNextTaskConflict(task) {
+  // does extending this task collide with the next scheduled task?
+  const now = getNowMin();
+  const projectedEnd = now + 15; // assume it'll take at least 15 more min
+  const next = tasks
+    .filter(t => t.status !== 'unscheduled' && t.id !== task.id && t.startMin > task.startMin)
+    .sort((a,b) => a.startMin - b.startMin)[0];
+  if (next && projectedEnd >= next.startMin) {
+    return next;
+  }
+  return null;
+}
+
+/* ============================================================
+   ADD TASK MODAL
+   ============================================================ */
+let prefillTitle = null;
+
+function openAddTask(prefill) {
+  prefillTitle = prefill || null;
+  document.getElementById('input-title').value = prefill || '';
+  populateStartTimes();
+  document.querySelectorAll('.duration-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelector('.duration-chip[data-min="60"]').classList.add('selected');
+  openModal('modal-add');
+}
+
+function populateStartTimes() {
+  const sel = document.getElementById('input-start');
+  sel.innerHTML = '';
+  const now = getNowMin();
+  for (let m = DAY_START; m <= DAY_END; m += 30) {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = formatTime(m);
+    if (m >= now && !opt.selected && sel.options.length === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  // select nearest future slot
+  let nearest = [...sel.options].find(o => parseInt(o.value) >= now) || sel.options[0];
+  sel.value = nearest.value;
+}
+
+document.getElementById('duration-grid').addEventListener('click', (e) => {
+  if (e.target.classList.contains('duration-chip')) {
+    document.querySelectorAll('.duration-chip').forEach(c => c.classList.remove('selected'));
+    e.target.classList.add('selected');
+  }
+});
+
+function saveTask() {
+  const title = document.getElementById('input-title').value.trim();
+  if (!title) {
+    alert('Give the task a name first.');
+    return;
+  }
+  const durationMin = parseInt(document.querySelector('.duration-chip.selected').dataset.min);
+  const startMin = parseInt(document.getElementById('input-start').value);
+
+  // if this was a previously-unscheduled item, remove the unscheduled placeholder
+  if (prefillTitle) {
+    tasks = tasks.filter(t => !(t.status === 'unscheduled' && t.title === prefillTitle));
+  }
+
+  tasks.push({
+    id: taskIdCounter++,
+    title,
+    durationMin,
+    startMin,
+    status: 'planned',
+    startedAt: null,
+    endedAt: null
+  });
+
+  closeModal('modal-add');
+  renderTimeline();
+}
+
+/* ============================================================
+   TASK DETAIL MODAL — Start / Stop / Extend mechanism
+   ============================================================ */
+let currentDetailId = null;
+
+function openDetail(id) {
+  currentDetailId = id;
+  const t = tasks.find(x => x.id === id);
+  const now = getNowMin();
+  const content = document.getElementById('detail-content');
+
+  let actionButtons = '';
+  let statusLine = '';
+
+  if (t.status === 'planned') {
+    statusLine = `<div class="modal-sub">Scheduled ${formatTime(t.startMin)}–${formatTime(t.startMin + t.durationMin)} · not started yet</div>`;
+    actionButtons = `
+      <button class="btn-primary" onclick="startTask(${t.id})">▶ Start now</button>
+      <button class="btn-secondary" onclick="markDone(${t.id})">Mark as done</button>
+    `;
+  } else if (t.status === 'active' || t.status === 'overrun') {
+    const elapsed = now - t.startMin;
+    const remaining = t.durationMin - elapsed;
+    statusLine = t.status === 'overrun'
+      ? `<div class="modal-sub" style="color:var(--red)">⚠ Running ${elapsed - t.durationMin} min over your ${t.durationMin}m estimate</div>`
+      : `<div class="modal-sub">In progress · ${remaining} min left of your ${t.durationMin}m estimate</div>`;
+    actionButtons = `
+      <button class="btn-primary" onclick="markDone(${t.id})">✓ Finish task</button>
+      <button class="btn-secondary" onclick="extendTask(${t.id})">+ Add 30 min</button>
+    `;
+  } else if (t.status === 'done') {
+    statusLine = `<div class="modal-sub" style="color:var(--sage)">✓ Completed</div>`;
+    actionButtons = `<button class="btn-secondary" onclick="closeModal('modal-detail')">Close</button>`;
+  }
+
+  content.innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="modal-title">${t.title}</div>
+    ${statusLine}
+    ${actionButtons}
+    <button class="btn-secondary btn-danger-outline" onclick="deleteTask(${t.id})">Remove task</button>
+  `;
+  openModal('modal-detail');
+}
+
+function startTask(id) {
+  const t = tasks.find(x => x.id === id);
+  t.status = 'active';
+  t.startedAt = getNowMin();
+  closeModal('modal-detail');
+  renderTimeline();
+}
+
+function extendTask(id) {
+  const t = tasks.find(x => x.id === id);
+  t.durationMin += 30;
+  if (t.status === 'overrun') {
+    const now = getNowMin();
+    if (now - t.startMin <= t.durationMin) t.status = 'active';
+  }
+  closeModal('modal-detail');
+  closeModal('modal-conflict');
+  renderTimeline();
+}
+
+function markDone(id) {
+  const t = tasks.find(x => x.id === id);
+  const now = getNowMin();
+  const actualDuration = t.startedAt ? (now - t.startMin) : t.durationMin;
+  history.push({ title: t.title, planned: t.durationMin, actual: actualDuration });
+  t.status = 'done';
+  closeModal('modal-detail');
+  closeModal('modal-conflict');
+  renderTimeline();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  closeModal('modal-detail');
+  renderTimeline();
+}
+
+/* ============================================================
+   CONFLICT DETECTION MODAL
+   ============================================================ */
+function showConflictIfAny() {
+  const now = getNowMin();
+  const overrunTask = tasks.find(t => t.status === 'overrun');
+  if (!overrunTask) return;
+
+  const next = findNextTaskConflict(overrunTask);
+  const elapsed = now - overrunTask.startMin;
+  const overBy = elapsed - overrunTask.durationMin;
+
+  const content = document.getElementById('conflict-content');
+  content.innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="conflict-icon">⚠️</div>
+    <div class="modal-title">Running over</div>
+    <div class="modal-sub">${overrunTask.title}</div>
+
+    <div class="conflict-stat-row"><span>Planned</span><span class="val">${overrunTask.durationMin} min</span></div>
+    <div class="conflict-stat-row"><span>Elapsed</span><span class="val">${elapsed} min</span></div>
+    <div class="conflict-stat-row"><span>Over by</span><span class="val" style="color:var(--red)">${overBy} min</span></div>
+
+    ${next ? `<div class="impact-box">This affects <b>${next.title}</b> at ${formatTime(next.startMin)} — it may need to shift.</div>` : ''}
+
+    <button class="btn-primary" onclick="extendTask(${overrunTask.id})">Add 30 min to this task</button>
+    <button class="btn-secondary" onclick="markDone(${overrunTask.id})">Actually, I'm done</button>
+    <button class="btn-secondary" onclick="closeModal('modal-conflict')">Remind me later</button>
+  `;
+  openModal('modal-conflict');
+}
+
+/* ============================================================
+   END OF DAY SUMMARY
+   ============================================================ */
+function showSummary() {
+  document.getElementById('tab-summary').classList.add('active');
+  document.getElementById('tab-today').classList.remove('active');
+
+  const done = tasks.filter(t => t.status === 'done').length;
+  const overrun = history.filter(h => h.actual > h.planned).length;
+  const planned = tasks.filter(t => t.status === 'planned').length;
+
+  document.getElementById('summary-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  document.getElementById('summary-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-num" style="color:var(--sage)">${done}</div><div class="stat-label">Done</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${overrun}</div><div class="stat-label">Ran over</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--text-dim)">${planned}</div><div class="stat-label">Upcoming</div></div>
+  `;
+
+  const histHtml = history.length === 0
+    ? `<div class="field-hint">No completed tasks yet today. Finish a task to see how your estimate compared to reality.</div>`
+    : history.map(h => {
+        const delta = h.actual - h.planned;
+        const cls = delta > 0 ? 'over' : (delta < 0 ? 'under' : '');
+        const sign = delta > 0 ? '+' : '';
+        return `<div class="history-row"><span class="name">${h.title}</span><span class="delta ${cls}">${sign}${delta} min</span></div>`;
+      }).join('');
+  document.getElementById('summary-history').innerHTML = histHtml;
+
+  // insight: based on actual history data, not invented
+  let insight = `<b>Not enough data yet.</b> Complete a few more tasks and we'll start showing you patterns — like which task types you tend to underestimate.`;
+  if (history.length >= 1) {
+    const totalPlanned = history.reduce((s,h) => s + h.planned, 0);
+    const totalActual = history.reduce((s,h) => s + h.actual, 0);
+    const diff = totalActual - totalPlanned;
+    if (diff > 0) {
+      insight = `<b>Across ${history.length} task${history.length>1?'s':''} today:</b> planned ${totalPlanned} min, actually took ${totalActual} min — ${diff} min more than estimated. Try padding similar tasks by ${Math.round(diff/history.length)} min next time.`;
+    } else if (diff < 0) {
+      insight = `<b>Across ${history.length} task${history.length>1?'s':''} today:</b> planned ${totalPlanned} min, actually took ${totalActual} min — you finished ${Math.abs(diff)} min faster than planned. Nice estimating.`;
+    } else {
+      insight = `<b>Across ${history.length} task${history.length>1?'s':''} today:</b> your estimates matched reality exactly. Whatever you're doing, keep doing it.`;
+    }
+  }
+  document.getElementById('summary-insight').innerHTML = insight;
+
+  openModal('modal-summary');
+}
+
+function showScreen(name) {
+  document.getElementById('tab-today').classList.add('active');
+  document.getElementById('tab-summary').classList.remove('active');
+}
+
+/* ============================================================
+   MODAL HELPERS
+   ============================================================ */
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+/* ============================================================
+   INIT + LIVE CLOCK SIMULATION
+   ============================================================ */
+function init() {
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  seedDemoData();
+  renderTimeline();
+
+  // wait for layout to settle before measuring/scrolling — fixes race condition
+  requestAnimationFrame(() => {
+    requestAnimationFrame(scrollToNow);
+  });
+
+  // keep the timeline in sync with the real clock (no artificial speed-up)
+  setInterval(() => {
+    renderTimeline();
+    const justOverran = tasks.find(t => t.status === 'overrun' && !t._alerted);
+    if (justOverran) {
+      justOverran._alerted = true;
+      showConflictIfAny();
+    }
+  }, 10000); // refresh every 10s — enough to catch real elapsed time without being wasteful
+}
+
+// Optional: call this from the console or a debug button to fast-forward time for demos
+function simulateTimePassing(minutes = 1) {
+  nowOffsetMin += minutes;
+  renderTimeline();
+  const justOverran = tasks.find(t => t.status === 'overrun' && !t._alerted);
+  if (justOverran) {
+    justOverran._alerted = true;
+    showConflictIfAny();
+  }
+}
+
+function scrollToNow() {
+  const now = getNowMin();
+  const timeline = document.getElementById('timeline');
+  if (!timeline) return;
+  const rect = timeline.getBoundingClientRect();
+  const timelineTop = rect.top + window.scrollY;
+  const targetY = Math.max(0, timelineTop + minuteToY(now) - 140);
+  window.scrollTo({ top: targetY, behavior: 'instant' });
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
