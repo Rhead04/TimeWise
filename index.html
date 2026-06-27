@@ -6,302 +6,543 @@
 <title>Timewise — time-aware to-do</title>
 <style>
   :root {
-    --bg: #1C1B1A;
-    --bg-raised: #262422;
-    --bg-card: #322F2C;
-    --text: #FFFFFF;
-    --text-dim: #C2BDB5;
-    --text-faint: #918C84;
-    --amber: #F2A45C;
-    --amber-dim: #4A3A28;
-    --sage: #93C2A4;
-    --sage-dim: #2A3A30;
-    --red: #E37861;
-    --red-dim: #4A2B26;
-    --line: #46433C;
-    --radius: 14px;
+    --bg: #0B0D10;
+    --bg-soft: #111418;
+    --panel: rgba(24, 28, 34, 0.88);
+    --panel-solid: #181C22;
+    --card: #20262E;
+    --card-2: #262D37;
+    --text: #F8FAFC;
+    --text-dim: #A7B0BE;
+    --text-faint: #687383;
+    --line: rgba(255,255,255,0.09);
+    --line-strong: rgba(255,255,255,0.16);
+    --accent: #F59E0B;
+    --accent-soft: rgba(245,158,11,0.14);
+    --green: #22C55E;
+    --green-soft: rgba(34,197,94,0.14);
+    --red: #EF4444;
+    --red-soft: rgba(239,68,68,0.16);
+    --blue: #60A5FA;
+    --blue-soft: rgba(96,165,250,0.14);
+    --shadow: 0 18px 45px rgba(0,0,0,0.36);
+    --radius-lg: 24px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+  html { background: #050607; }
+
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
-    max-width: 420px;
-    margin: 0 auto;
     min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(245,158,11,0.16), transparent 30%),
+      radial-gradient(circle at 85% 12%, rgba(96,165,250,0.10), transparent 28%),
+      linear-gradient(180deg, #101217 0%, var(--bg) 38%, #07080A 100%);
     position: relative;
     overflow-x: hidden;
   }
 
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    max-width: 430px;
+    margin: 0 auto;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(255,255,255,0.025), transparent 18%, transparent 82%, rgba(255,255,255,0.025));
+    z-index: 0;
+  }
+
   .screen {
     display: none;
-    padding: 0 20px 100px;
+    padding: 0 18px 112px;
     min-height: 100vh;
+    position: relative;
+    z-index: 1;
   }
   .screen.active { display: block; }
 
-  /* ---- Header (sticky so it stays visible while the timeline scrolls) ---- */
   .header-wrap {
     position: sticky;
     top: 0;
-    background: var(--bg);
-    padding: 24px 0 14px;
     z-index: 8;
+    padding: 22px 0 16px;
+    background: linear-gradient(180deg, rgba(11,13,16,0.98) 0%, rgba(11,13,16,0.92) 72%, rgba(11,13,16,0) 100%);
+    backdrop-filter: blur(18px);
   }
+
   .header {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 4px;
-  }
-  .header h1 {
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-  .header .date {
-    font-size: 13px;
-    color: var(--text-dim);
-    font-variant-numeric: tabular-nums;
-  }
-  .subtitle {
-    color: var(--text-dim);
-    font-size: 14px;
+    align-items: flex-start;
+    gap: 16px;
     margin-bottom: 14px;
   }
 
-  .day-stats {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-  }
-  .stat-pill {
+  .eyebrow {
+    color: var(--accent);
     font-size: 12px;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: var(--bg-card);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 6px 12px;
-  }
-  .stat-pill-risk {
-    color: var(--red);
-    border-color: var(--red);
-    background: var(--red-dim);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
   }
 
-  /* ---- Timeline ---- */
+  .header h1 {
+    font-size: 32px;
+    line-height: 0.95;
+    font-weight: 850;
+    letter-spacing: -0.055em;
+  }
+
+  .header .date {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 11px;
+    white-space: nowrap;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.4;
+    margin: -4px 0 16px;
+  }
+
+  .day-stats {
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035));
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .capacity-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .capacity-title {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 750;
+  }
+
+  .capacity-percent {
+    font-size: 24px;
+    font-weight: 850;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .capacity-bar {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .capacity-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent), #FDE68A);
+    box-shadow: 0 0 22px rgba(245,158,11,0.42);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .stat-pill {
+    min-height: 58px;
+    background: rgba(255,255,255,0.045);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 10px 9px;
+  }
+
+  .stat-pill .stat-value {
+    display: block;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 850;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .stat-pill .stat-caption {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-faint);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .stat-pill-risk {
+    background: var(--red-soft);
+    border-color: rgba(239,68,68,0.45);
+  }
+  .stat-pill-risk .stat-value { color: #FCA5A5; }
+
   .timeline {
     position: relative;
-    padding-left: 52px;
+    padding-left: 54px;
+    margin-top: 8px;
   }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 52px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.15), transparent);
+  }
+
   .hour-row {
     position: relative;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid rgba(255,255,255,0.07);
   }
   .hour-row:first-child { border-top: none; }
+
   .hour-label {
     position: absolute;
-    left: -52px;
-    top: -7px;
-    width: 40px;
+    left: -54px;
+    top: -8px;
+    width: 42px;
     text-align: right;
     font-size: 11px;
     color: var(--text-faint);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
 
   .task-block {
     position: absolute;
-    left: 14px;
-    right: 14px;
-    border-radius: 10px;
-    padding: 6px 10px;
+    left: 15px;
+    right: 4px;
+    border-radius: 16px;
+    padding: 11px 13px 10px 16px;
     cursor: pointer;
-    transition: transform 0.15s ease;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    align-content: start;
+    gap: 3px;
     z-index: 6;
+    min-height: 64px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.22);
   }
-  .task-block:active { transform: scale(0.98); }
+
+  .task-block::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--blue);
+    opacity: 0.9;
+  }
+
+  .task-block:active { transform: scale(0.985); }
 
   .task-block.planned {
-    background: var(--bg-card);
-    border: 1px solid var(--line);
+    background: rgba(96,165,250,0.10);
+    border: 1px solid rgba(96,165,250,0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
+  .task-block.paused {
+    background: rgba(245,158,11,0.12);
+    border: 1px dashed rgba(245,158,11,0.60);
+  }
+
+  .task-block.paused::before {
+    background: var(--accent);
+  }
+
+  .task-block.paused .task-meta::before {
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(245,158,11,0.55);
+  }
+
   .task-block.active {
-    background: var(--amber-dim);
-    border: 1px solid var(--amber);
-    box-shadow: 0 0 0 1px var(--amber) inset;
+    background: linear-gradient(180deg, rgba(245,158,11,0.22), rgba(245,158,11,0.10));
+    border: 1px solid rgba(245,158,11,0.72);
+    box-shadow: 0 14px 34px rgba(245,158,11,0.16), 0 0 0 1px rgba(245,158,11,0.18) inset;
   }
+  .task-block.active::before { background: var(--accent); }
+
   .task-block.done {
-    background: var(--sage-dim);
-    border: 1px solid var(--sage);
-    opacity: 0.7;
+    background: linear-gradient(180deg, rgba(34,197,94,0.18), rgba(34,197,94,0.08));
+    border: 1px solid rgba(34,197,94,0.44);
+    opacity: 0.78;
   }
+  .task-block.done::before { background: var(--green); }
+
   .task-block.overrun {
-    background: var(--red-dim);
-    border: 1px solid var(--red);
+    background: linear-gradient(180deg, rgba(239,68,68,0.22), rgba(239,68,68,0.10));
+    border: 1px solid rgba(239,68,68,0.72);
     animation: pulse 2s ease-in-out infinite;
   }
+  .task-block.overrun::before { background: var(--red); }
+
   @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(214, 97, 74, 0); }
-    50% { box-shadow: 0 0 0 4px rgba(214, 97, 74, 0.15); }
+    0%, 100% { box-shadow: 0 12px 30px rgba(0,0,0,0.26), 0 0 0 0 rgba(239,68,68,0); }
+    50% { box-shadow: 0 12px 30px rgba(0,0,0,0.26), 0 0 0 5px rgba(239,68,68,0.16); }
   }
 
   .task-title {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 820;
+    letter-spacing: -0.025em;
     line-height: 1.15;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-height: 18px;
   }
+
   .task-time {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--text-dim);
+    font-weight: 720;
     font-variant-numeric: tabular-nums;
-    margin-top: 1px;
+    line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .task-icon { font-size: 13px; margin-right: 4px; }
+
+  .task-meta {
+    align-self: end;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    color: rgba(248,250,252,0.80);
+    text-transform: uppercase;
+  }
+
+  .task-meta::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--blue);
+    box-shadow: 0 0 8px rgba(96,165,250,0.45);
+  }
+
+  .task-block.done .task-meta::before { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.45); }
+  .task-block.active .task-meta::before { background: var(--accent); box-shadow: 0 0 8px rgba(245,158,11,0.55); }
+  .task-block.overrun .task-meta::before { background: var(--red); box-shadow: 0 0 8px rgba(239,68,68,0.55); }
+
+  /* Small blocks must stay readable. No decorative chips, no overlap, no UI gymnastics. */
+  .task-block.compact {
+    grid-template-rows: auto auto;
+    gap: 2px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .task-block.compact .task-title { font-size: 14px; }
+  .task-block.compact .task-time { font-size: 11px; }
+  .task-block.compact .task-meta { display: none; }
 
   .now-line {
     position: absolute;
-    left: -52px;
+    left: -54px;
     right: 0;
     height: 2px;
-    background: var(--amber);
-    z-index: 5;
-    box-shadow: 0 0 6px rgba(242, 164, 92, 0.5);
+    background: var(--accent);
+    z-index: 7;
+    box-shadow: 0 0 14px rgba(245,158,11,0.75);
   }
   .now-line::before {
     content: '';
     position: absolute;
-    left: 0;
-    top: -4px;
-    width: 10px;
-    height: 10px;
+    left: 46px;
+    top: -5px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background: var(--amber);
-    box-shadow: 0 0 8px rgba(242, 164, 92, 0.7);
+    background: var(--accent);
+    box-shadow: 0 0 15px rgba(245,158,11,0.85);
   }
   .now-label {
     position: absolute;
-    left: 14px;
-    top: -10px;
+    right: 0;
+    top: -13px;
     font-size: 11px;
-    color: var(--bg);
-    background: var(--amber);
-    font-weight: 700;
+    color: #111827;
+    background: linear-gradient(90deg, var(--accent), #FDE68A);
+    font-weight: 900;
     font-variant-numeric: tabular-nums;
-    padding: 2px 8px;
-    border-radius: 20px;
+    padding: 5px 9px;
+    border-radius: 999px;
     white-space: nowrap;
   }
 
-  /* ---- Unscheduled section ---- */
   .unscheduled {
     margin-top: 36px;
-    padding-top: 20px;
-    border-top: 1px solid var(--line);
+    padding: 18px;
+    border: 1px solid rgba(239,68,68,0.28);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(239,68,68,0.08), rgba(255,255,255,0.03));
   }
   .section-label {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     color: var(--text-faint);
     margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 6px;
+    font-weight: 850;
   }
   .unscheduled-item {
-    background: var(--bg-raised);
-    border: 1px solid var(--red);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(239,68,68,0.35);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 9px;
     cursor: pointer;
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 12px;
   }
   .risk-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--red);
     margin-top: 5px;
     flex-shrink: 0;
-    box-shadow: 0 0 6px rgba(227, 120, 97, 0.6);
+    box-shadow: 0 0 12px rgba(239,68,68,0.7);
   }
   .unscheduled-title {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 800;
     color: var(--text);
+    letter-spacing: -0.02em;
   }
   .unscheduled-sub {
     font-size: 12px;
     color: var(--text-dim);
-    margin-top: 2px;
+    margin-top: 4px;
+    line-height: 1.35;
   }
-
-  /* ---- FAB ---- */
   .fab {
     position: fixed;
-    bottom: 28px;
-    right: calc(50% - 210px + 20px);
+    left: 50%;
+    bottom: calc(22px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
     width: 56px;
     height: 56px;
+    min-width: 56px;
+    max-width: 56px;
+    min-height: 56px;
+    max-height: 56px;
     border-radius: 50%;
-    background: var(--amber);
-    color: var(--bg);
-    border: none;
-    font-size: 28px;
-    font-weight: 400;
-    box-shadow: 0 6px 20px rgba(232, 149, 74, 0.4);
+    background: var(--accent);
+    color: #0B0D10;
+    border: 1px solid rgba(255,255,255,0.24);
+    box-shadow: 0 14px 34px rgba(245,158,11,0.34), 0 0 0 8px rgba(245,158,11,0.10);
     cursor: pointer;
-    z-index: 20;
-  }
-  @media (max-width: 420px) {
-    .fab { right: 20px; }
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    font-size: 0;
+    line-height: 1;
   }
 
+  .fab.hidden { display: none !important; }
+
+  .fab .plus-mark {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
+  
+  @media (max-width: 430px) { .fab { right: 18px; } }
   .demo-fast-forward {
     position: fixed;
-    bottom: 92px;
-    right: calc(50% - 210px + 20px);
-    background: var(--bg-card);
-    color: var(--text-dim);
+    bottom: calc(118px + env(safe-area-inset-bottom));
+    right: calc(50% - 210px + 16px);
+    background: rgba(24,28,34,0.72);
+    color: var(--text-faint);
     border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 8px 14px;
-    font-size: 12px;
-    font-weight: 600;
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 11px;
+    font-weight: 700;
     cursor: pointer;
-    z-index: 20;
+    z-index: 18;
+    opacity: 0.16;
   }
-  @media (max-width: 420px) {
-    .demo-fast-forward { right: 20px; }
-  }
+  @media (max-width: 430px) {
+  .demo-fast-forward {
+    position: fixed;
+    bottom: calc(118px + env(safe-area-inset-bottom));
+    right: calc(50% - 210px + 16px);
+    background: rgba(24,28,34,0.72);
+    color: var(--text-faint);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 18;
+    opacity: 0.16;
+  } }
 
-  /* ---- Modal screens (Add task, Conflict, Summary) ---- */
   .modal-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.62);
     z-index: 30;
-    max-width: 420px;
+    max-width: 430px;
     margin: 0 auto;
+    backdrop-filter: blur(10px);
   }
   .modal-overlay.active { display: block; }
   .modal-sheet {
@@ -309,135 +550,153 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--bg-raised);
-    border-radius: 20px 20px 0 0;
-    padding: 28px 20px 32px;
-    max-height: 88vh;
+    background: linear-gradient(180deg, rgba(31,36,44,0.98), rgba(18,21,26,0.99));
+    border: 1px solid rgba(255,255,255,0.10);
+    border-bottom: none;
+    border-radius: 28px 28px 0 0;
+    padding: 16px 20px 34px;
+    max-height: 90vh;
     overflow-y: auto;
+    box-shadow: 0 -22px 55px rgba(0,0,0,0.48);
   }
   .modal-handle {
-    width: 36px;
-    height: 4px;
-    background: var(--text-faint);
-    border-radius: 4px;
-    margin: 0 auto 20px;
+    width: 42px;
+    height: 5px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 999px;
+    margin: 0 auto 24px;
   }
   .modal-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 4px;
+    font-size: 24px;
+    font-weight: 850;
+    letter-spacing: -0.045em;
+    margin-bottom: 6px;
   }
   .modal-sub {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text-dim);
+    line-height: 1.45;
     margin-bottom: 24px;
   }
 
-  .field { margin-bottom: 20px; }
+  .field { margin-bottom: 22px; }
   .field-label {
     font-size: 13px;
-    font-weight: 600;
-    color: var(--text-dim);
-    margin-bottom: 6px;
+    font-weight: 850;
+    color: var(--text);
+    margin-bottom: 8px;
     display: block;
   }
   .field-hint {
     font-size: 12px;
     color: var(--text-faint);
-    margin-top: 5px;
+    margin-top: 7px;
+    line-height: 1.38;
   }
   input[type="text"], select {
     width: 100%;
-    background: var(--bg-card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 13px 14px;
+    background: rgba(255,255,255,0.055);
+    border: 1px solid var(--line-strong);
+    border-radius: 16px;
+    padding: 15px 15px;
     color: var(--text);
-    font-size: 15px;
+    font-size: 16px;
+    font-weight: 650;
     font-family: inherit;
   }
+  input[type="text"]::placeholder { color: var(--text-faint); }
   input[type="text"]:focus, select:focus {
     outline: none;
-    border-color: var(--amber);
+    border-color: rgba(245,158,11,0.82);
+    box-shadow: 0 0 0 4px rgba(245,158,11,0.10);
   }
 
   .duration-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    gap: 9px;
   }
   .duration-chip {
-    background: var(--bg-card);
+    background: rgba(255,255,255,0.055);
     border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 10px 0;
+    border-radius: 15px;
+    padding: 13px 0;
     text-align: center;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 850;
     cursor: pointer;
     font-variant-numeric: tabular-nums;
   }
   .duration-chip.selected {
-    background: var(--amber-dim);
-    border-color: var(--amber);
-    color: var(--amber);
+    background: var(--accent-soft);
+    border-color: rgba(245,158,11,0.72);
+    color: #FDE68A;
+    box-shadow: inset 0 0 0 1px rgba(245,158,11,0.16);
   }
 
-  .btn-primary {
+  .btn-primary, .btn-secondary, .btn-danger-outline {
     width: 100%;
-    background: var(--amber);
-    color: var(--bg);
-    border: none;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 16px;
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 900;
     cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #FDE68A, var(--accent));
+    color: #111827;
+    border: none;
+    box-shadow: 0 14px 32px rgba(245,158,11,0.22);
     margin-top: 8px;
   }
   .btn-secondary {
-    width: 100%;
-    background: transparent;
+    background: rgba(255,255,255,0.045);
     color: var(--text-dim);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
+    border: 1px solid var(--line-strong);
     margin-top: 10px;
   }
   .btn-danger-outline {
-    border-color: var(--red);
-    color: var(--red);
+    border-color: rgba(239,68,68,0.45);
+    color: #FCA5A5;
+    background: rgba(239,68,68,0.08);
   }
 
-  /* Conflict modal specific */
   .conflict-icon {
-    font-size: 36px;
-    margin-bottom: 8px;
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: var(--red-soft);
+    border: 1px solid rgba(239,68,68,0.42);
+    font-size: 30px;
+    margin-bottom: 16px;
   }
   .conflict-stat-row {
     display: flex;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 13px 0;
     border-bottom: 1px solid var(--line);
     font-size: 14px;
+    color: var(--text-dim);
   }
   .conflict-stat-row .val {
-    font-weight: 700;
+    color: var(--text);
+    font-weight: 900;
     font-variant-numeric: tabular-nums;
   }
   .impact-box {
-    background: var(--red-dim);
-    border: 1px solid var(--red);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin: 16px 0;
-    font-size: 13px;
+    background: var(--red-soft);
+    border: 1px solid rgba(239,68,68,0.36);
+    border-radius: 18px;
+    padding: 14px 15px;
+    margin: 18px 0;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #FEE2E2;
   }
 
-  /* Summary screen */
   .summary-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -445,47 +704,55 @@
     margin-bottom: 24px;
   }
   .stat-card {
-    background: var(--bg-card);
-    border-radius: 12px;
-    padding: 16px 8px;
+    background: rgba(255,255,255,0.055);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 17px 8px;
     text-align: center;
   }
   .stat-num {
-    font-size: 24px;
-    font-weight: 800;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
   }
   .stat-label {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 2px;
+    font-size: 10.5px;
+    color: var(--text-faint);
+    margin-top: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 850;
   }
   .history-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 0;
+    padding: 14px 0;
     border-bottom: 1px solid var(--line);
   }
-  .history-row .name { font-size: 14px; }
+  .history-row .name { font-size: 14px; font-weight: 750; }
   .history-row .delta {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 900;
     font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,0.055);
+    border-radius: 999px;
+    padding: 5px 8px;
   }
-  .delta.over { color: var(--red); }
-  .delta.under { color: var(--sage); }
+  .delta.over { color: #FCA5A5; background: var(--red-soft); }
+  .delta.under { color: #86EFAC; background: var(--green-soft); }
   .insight-box {
-    background: var(--amber-dim);
-    border: 1px solid var(--amber);
-    border-radius: 12px;
-    padding: 14px;
+    background: linear-gradient(180deg, rgba(245,158,11,0.15), rgba(245,158,11,0.07));
+    border: 1px solid rgba(245,158,11,0.35);
+    border-radius: 18px;
+    padding: 15px;
     margin-top: 20px;
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.52;
+    color: #F8FAFC;
   }
-  .insight-box b { color: var(--amber); }
-
+  .insight-box b { color: #FDE68A; }
   .nav-tabs {
     position: fixed;
     bottom: 0;
@@ -493,22 +760,170 @@
     right: 0;
     max-width: 420px;
     margin: 0 auto;
-    background: var(--bg-raised);
+    background: rgba(17,20,24,0.90);
     border-top: 1px solid var(--line);
-    display: flex;
-    z-index: 15;
-    padding-bottom: env(safe-area-inset-bottom);
+    display: grid;
+    grid-template-columns: 1fr 72px 1fr;
+    align-items: center;
+    column-gap: 8px;
+    z-index: 25;
+    min-height: 96px;
+    padding: 10px 20px calc(12px + env(safe-area-inset-bottom));
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    box-shadow: 0 -18px 46px rgba(0,0,0,0.38);
   }
   .nav-tab {
-    flex: 1;
+    width: 100%;
     text-align: center;
-    padding: 14px 0 10px;
-    font-size: 11px;
+    padding: 10px 0 8px;
+    font-size: 12px;
+    font-weight: 800;
     color: var(--text-faint);
     cursor: pointer;
+    border-radius: 18px;
+    transition: color .16s ease, background .16s ease, transform .16s ease;
   }
-  .nav-tab.active { color: var(--amber); }
-  .nav-tab .icon { font-size: 18px; display: block; margin-bottom: 2px; }
+  .nav-tab:active { transform: scale(0.96); }
+  .nav-tab.active {
+    color: var(--accent);
+    background: rgba(245,158,11,0.08);
+  }
+  .nav-tab .icon {
+    font-size: 20px;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .nav-spacer {
+    width: 72px;
+    height: 56px;
+    pointer-events: none;
+  }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  /* ---- Priority + interruption additions ---- */
+  .priority-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .priority-chip {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 11px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .priority-chip.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
+  .task-priority-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: 1px;
+    background: var(--text-faint);
+    box-shadow: 0 0 8px rgba(255,255,255,0.16);
+  }
+
+  .priority-high { background: var(--red); box-shadow: 0 0 10px rgba(239,68,68,0.55); }
+  .priority-medium { background: var(--accent); box-shadow: 0 0 10px rgba(245,158,11,0.50); }
+  .priority-low { background: var(--blue); box-shadow: 0 0 10px rgba(96,165,250,0.45); }
+
+  .pause-info {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(245,158,11,0.10);
+    border: 1px solid rgba(245,158,11,0.22);
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .interruption-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 18px 0 22px;
+  }
+
+  .mini-stat-card {
+    background: rgba(255,255,255,0.055);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 14px 12px;
+  }
+
+  .mini-stat-value {
+    font-size: 20px;
+    font-weight: 850;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mini-stat-label {
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+
+  /* ---- Schedule conflict warning ---- */
+  .schedule-conflict-box {
+    background: rgba(239,68,68,0.13);
+    border: 1px solid rgba(239,68,68,0.38);
+    border-radius: 18px;
+    padding: 16px;
+    margin: 18px 0;
+  }
+
+  .schedule-conflict-title {
+    font-size: 16px;
+    font-weight: 850;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .schedule-conflict-text {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .suggested-slot-box {
+    background: rgba(245,158,11,0.12);
+    border: 1px solid rgba(245,158,11,0.35);
+    border-radius: 16px;
+    padding: 14px;
+    margin: 14px 0;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .suggested-slot-box b {
+    color: #FFE082;
+  }
+
 </style>
 </head>
 <body>
@@ -517,10 +932,13 @@
   <div class="screen active" id="screen-today">
     <div class="header-wrap">
       <div class="header">
-        <h1>Today</h1>
+        <div>
+          <div class="eyebrow">Timewise</div>
+          <h1>Today</h1>
+        </div>
         <span class="date" id="today-date"></span>
       </div>
-      <div class="subtitle">Tasks live on the clock, not just on a list.</div>
+      <div class="subtitle">Block time before the day quietly eats your plan. Very polite of it.</div>
       <div class="day-stats" id="day-stats"></div>
     </div>
 
@@ -532,13 +950,14 @@
     </div>
   </div>
 
-  <button class="fab" onclick="openAddTask()">+</button>
-  <button class="demo-fast-forward" onclick="simulateTimePassing(30)" title="Demo only: fast-forward 30 min">⏩ +30m</button>
+  <button class="fab" id="fab-add" onclick="openAddTask()" aria-label="Add task"><span class="plus-mark">+</span></button>
+  <button class="demo-fast-forward" onclick="simulateTimePassing(30)" title="Demo only: fast-forward 30 min">Demo +30m</button>
 
   <div class="nav-tabs">
     <div class="nav-tab active" id="tab-today" onclick="showScreen('today')">
       <span class="icon">📅</span>Today
     </div>
+    <div class="nav-spacer" aria-hidden="true"></div>
     <div class="nav-tab" id="tab-summary" onclick="showSummary()">
       <span class="icon">📊</span>Summary
     </div>
@@ -567,6 +986,17 @@
         <div class="field-hint">How long you're blocking off — not a guess about everything that could go wrong.</div>
       </div>
 
+
+      <div class="field">
+        <label class="field-label">Priority</label>
+        <div class="priority-grid" id="priority-grid">
+          <div class="priority-chip" data-priority="high">🔴 High</div>
+          <div class="priority-chip selected" data-priority="medium">🟡 Medium</div>
+          <div class="priority-chip" data-priority="low">🔵 Low</div>
+        </div>
+        <div class="field-hint">Only a visual cue. Time still controls the schedule.</div>
+      </div>
+
       <div class="field">
         <label class="field-label">Start time</label>
         <select id="input-start">
@@ -575,6 +1005,14 @@
 
       <button class="btn-primary" onclick="saveTask()">Add to today</button>
       <button class="btn-secondary" onclick="closeModal('modal-add')">Cancel</button>
+    </div>
+  </div>
+
+
+  <!-- ============ MODAL: SCHEDULE CONFLICT ============ -->
+  <div class="modal-overlay" id="modal-schedule-conflict">
+    <div class="modal-sheet" id="schedule-conflict-content">
+      <!-- filled by JS -->
     </div>
   </div>
 
@@ -594,19 +1032,20 @@
 
   <!-- ============ MODAL: END OF DAY SUMMARY ============ -->
   <div class="modal-overlay" id="modal-summary">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
+    <div class="modal-sheet summary-sheet">
+<div class="modal-handle"></div>
       <div class="modal-title">End of day</div>
       <div class="modal-sub" id="summary-date"></div>
 
       <div class="summary-stats" id="summary-stats"></div>
+      <div class="interruption-summary" id="interruption-summary"></div>
 
       <div class="section-label">Plan vs. reality</div>
       <div id="summary-history"></div>
 
       <div class="insight-box" id="summary-insight"></div>
 
-      <button class="btn-secondary" onclick="closeModal('modal-summary')">Close</button>
+      <button class="btn-secondary" onclick="closeSummary()">Close</button>
     </div>
   </div>
 
@@ -614,8 +1053,8 @@
 /* ============================================================
    STATE
    ============================================================ */
-let tasks = []; // {id, title, durationMin, startMin (minutes from midnight), status: 'planned'|'active'|'done'|'overrun', startedAt (timestamp), endedAt}
-let history = []; // {title, planned, actual} — in-memory only, resets on reload
+let tasks = []; // {id, title, durationMin, startMin, priority, status, startedAt, endedAt, interruptions, pausedMin, pauseStartedAt}
+let history = []; // {title, planned, actual, interruptions, pausedMin, priority} — in-memory only, resets on reload
 
 let taskIdCounter = 1;
 let nowOffsetMin = 0; // for demo: lets us simulate time passing
@@ -627,15 +1066,38 @@ const DAY_END = 22 * 60;   // 22:00
    SEED DATA — mirrors the storyboard scenario
    ============================================================ */
 function seedDemoData() {
-  const now = getNowMin();
+  // Lightweight demo data for user testing:
+  // enough to test timeline + conflict detection, but not overloaded.
   tasks = [
-    { id: 1, title: '📘 HCI Lecture', durationMin: 120, startMin: 9 * 60, status: 'done', startedAt: null, endedAt: null },
-    { id: 2, title: '💻 Programming lab assignment', durationMin: 120, startMin: 14 * 60, status: 'planned', startedAt: null, endedAt: null },
-    { id: 3, title: '👥 Team meeting', durationMin: 60, startMin: 19 * 60, status: 'planned', startedAt: null, endedAt: null },
+    {
+      id: 1,
+      title: '📘 HCI Lecture',
+      durationMin: 120,
+      startMin: 9 * 60,
+      priority: 'medium',
+      status: 'planned',
+      startedAt: null,
+      endedAt: null,
+      interruptions: 0,
+      pausedMin: 0,
+      pauseStartedAt: null
+    },
+    {
+      id: 2,
+      title: '💻 Programming lab assignment',
+      durationMin: 120,
+      startMin: 14 * 60,
+      priority: 'high',
+      status: 'planned',
+      startedAt: null,
+      endedAt: null,
+      interruptions: 0,
+      pausedMin: 0,
+      pauseStartedAt: null
+    }
   ];
-  taskIdCounter = 4;
-  // unscheduled
-  tasks.push({ id: 0, title: 'Read lecture notes', durationMin: null, startMin: null, status: 'unscheduled' });
+
+  taskIdCounter = 3;
 }
 
 function getNowMin() {
@@ -646,8 +1108,8 @@ function getNowMin() {
 /* ============================================================
    NON-LINEAR TIME SCALE — compresses empty hours, expands busy ones
    ============================================================ */
-const HOUR_FULL_PX = 56;   // height for an hour that contains a task
-const HOUR_EMPTY_PX = 22;  // height for an hour with nothing scheduled
+const HOUR_FULL_PX = 84;   // height for an hour that contains a task
+const HOUR_EMPTY_PX = 26;  // height for an hour with nothing scheduled
 
 function hourHasTask(hourStart) {
   const hourEnd = hourStart + 60;
@@ -681,30 +1143,42 @@ function updateDayStats() {
   const el = document.getElementById('day-stats');
   if (!el) return;
 
-  const scheduled = tasks.filter(t => t.status !== 'unscheduled' && t.status !== 'done');
+  const scheduledAll = tasks.filter(t => t.status !== 'unscheduled');
+  const scheduledOpen = tasks.filter(t => t.status !== 'unscheduled' && t.status !== 'done');
   const now = getNowMin();
   const dayLengthMin = DAY_END - DAY_START;
   const elapsedMin = Math.max(0, Math.min(now, DAY_END) - DAY_START);
   const remainingDayMin = Math.max(0, dayLengthMin - elapsedMin);
-  const busyRemainingMin = scheduled
+
+  const busyRemainingMin = scheduledOpen
     .filter(t => t.startMin + t.durationMin > now)
     .reduce((s, t) => s + Math.min(t.durationMin, (t.startMin + t.durationMin) - Math.max(t.startMin, now)), 0);
+
   const freeMin = Math.max(0, remainingDayMin - busyRemainingMin);
-
-  const freeHours = Math.floor(freeMin / 60);
-  const freeMinsRem = Math.round(freeMin % 60);
-  const freeStr = freeHours > 0
-    ? `${freeHours}h${freeMinsRem > 0 ? ' ' + freeMinsRem + 'm' : ''} free today`
-    : `${freeMinsRem}m free today`;
-
+  const totalPlannedMin = scheduledAll.reduce((s, t) => s + (t.durationMin || 0), 0);
+  const capacityPct = Math.min(100, Math.round((totalPlannedMin / dayLengthMin) * 100));
   const unscheduledCount = tasks.filter(t => t.status === 'unscheduled').length;
-  const unschedStr = unscheduledCount > 0
-    ? `${unscheduledCount} task${unscheduledCount > 1 ? 's' : ''} unscheduled`
-    : 'All tasks have a time slot';
+  const overrunCount = tasks.filter(t => t.status === 'overrun').length;
+
+  function durationShort(min) {
+    const h = Math.floor(min / 60);
+    const m = Math.round(min % 60);
+    if (h <= 0) return `${m}m`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}m`;
+  }
 
   el.innerHTML = `
-    <span class="stat-pill">${freeStr}</span>
-    <span class="stat-pill ${unscheduledCount > 0 ? 'stat-pill-risk' : ''}">${unschedStr}</span>
+    <div class="capacity-head">
+      <span class="capacity-title">Today's capacity</span>
+      <span class="capacity-percent">${capacityPct}%</span>
+    </div>
+    <div class="capacity-bar"><div class="capacity-fill" style="width:${capacityPct}%"></div></div>
+    <div class="stat-grid">
+      <div class="stat-pill"><span class="stat-value">${durationShort(totalPlannedMin)}</span><span class="stat-caption">planned</span></div>
+      <div class="stat-pill"><span class="stat-value">${durationShort(freeMin)}</span><span class="stat-caption">free left</span></div>
+      <div class="stat-pill ${(unscheduledCount > 0 || overrunCount > 0) ? 'stat-pill-risk' : ''}"><span class="stat-value">${unscheduledCount + overrunCount}</span><span class="stat-caption">risks</span></div>
+    </div>
   `;
 }
 
@@ -745,7 +1219,7 @@ function renderTimeline() {
     let cls = 'task-block ' + t.status;
 
     if (t.status === 'active' || t.status === 'overrun') {
-      const elapsed = now - t.startMin;
+      const elapsed = now - t.startMin - (t.pausedMin || 0);
       effectiveDuration = Math.max(t.durationMin, elapsed);
       if (elapsed > t.durationMin) cls = 'task-block overrun';
     }
@@ -753,14 +1227,18 @@ function renderTimeline() {
     const topY = minuteToY(t.startMin);
     const bottomY = minuteToY(t.startMin + effectiveDuration);
 
-    block.className = cls;
+    const rawHeight = Math.max(bottomY - topY - 8, 60);
+    block.className = cls + (rawHeight < 74 ? ' compact' : '');
     block.style.top = (topY + 4) + 'px';
-    block.style.height = Math.max(bottomY - topY - 8, 36) + 'px';
+    block.style.height = rawHeight + 'px';
     block.onclick = () => openDetail(t.id);
+    block.setAttribute('aria-label', `${t.title}, ${formatTime(t.startMin)} to ${formatTime(t.startMin + t.durationMin)}`);
 
+    const displayStatus = cls.includes('overrun') ? 'Overrun' : (t.status === 'paused' ? 'Paused' : (t.status === 'active' ? 'Running' : (t.status === 'done' ? 'Done' : 'Planned')));
     block.innerHTML = `
-      <div class="task-title">${t.title}</div>
-      <div class="task-time">${formatTime(t.startMin)}–${formatTime(t.startMin + t.durationMin)}${t.status==='overrun' ? ' ⚠ running over' : ''}${t.status==='done' ? ' ✓' : ''}</div>
+      <div class="task-title"><span class="task-priority-dot priority-${t.priority || 'medium'}"></span>${t.title}</div>
+      <div class="task-time">${formatTime(t.startMin)}–${formatTime(t.startMin + t.durationMin)}</div>
+      <div class="task-meta">${displayStatus}</div>
     `;
     container.appendChild(block);
   });
@@ -806,7 +1284,7 @@ function checkForOverruns() {
   const now = getNowMin();
   tasks.forEach(t => {
     if (t.status === 'active') {
-      const elapsed = now - t.startMin;
+      const elapsed = now - t.startMin - (t.pausedMin || 0);
       if (elapsed > t.durationMin) {
         t.status = 'overrun';
       }
@@ -831,6 +1309,7 @@ function findNextTaskConflict(task) {
    ADD TASK MODAL
    ============================================================ */
 let prefillTitle = null;
+let pendingTaskDraft = null;
 
 function openAddTask(prefill) {
   prefillTitle = prefill || null;
@@ -838,6 +1317,8 @@ function openAddTask(prefill) {
   populateStartTimes();
   document.querySelectorAll('.duration-chip').forEach(c => c.classList.remove('selected'));
   document.querySelector('.duration-chip[data-min="60"]').classList.add('selected');
+  document.querySelectorAll('.priority-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelector('.priority-chip[data-priority="medium"]').classList.add('selected');
   openModal('modal-add');
 }
 
@@ -864,32 +1345,179 @@ document.getElementById('duration-grid').addEventListener('click', (e) => {
   }
 });
 
-function saveTask() {
+
+const priorityGrid = document.getElementById('priority-grid');
+if (priorityGrid) {
+  priorityGrid.addEventListener('click', (e) => {
+    if (e.target.classList.contains('priority-chip')) {
+      document.querySelectorAll('.priority-chip').forEach(c => c.classList.remove('selected'));
+      e.target.classList.add('selected');
+    }
+  });
+}
+
+
+
+function getSelectedTaskDraft() {
   const title = document.getElementById('input-title').value.trim();
-  if (!title) {
-    alert('Give the task a name first.');
-    return;
-  }
+  if (!title) return null;
+
   const durationMin = parseInt(document.querySelector('.duration-chip.selected').dataset.min);
   const startMin = parseInt(document.getElementById('input-start').value);
+  const priorityEl = document.querySelector('.priority-chip.selected');
+  const priority = priorityEl ? priorityEl.dataset.priority : 'medium';
 
-  // if this was a previously-unscheduled item, remove the unscheduled placeholder
+  return { title, durationMin, startMin, priority };
+}
+
+function getTaskEnd(task) {
+  return task.startMin + task.durationMin;
+}
+
+function findOverlappingTasks(startMin, durationMin, excludeId = null) {
+  const endMin = startMin + durationMin;
+
+  // Any scheduled block occupies time on the timeline, even if it is already done.
+  // Otherwise the app would allow impossible overlaps like 10–12 over a 9–11 lecture.
+  return tasks
+    .filter(t =>
+      t.status !== 'unscheduled' &&
+      t.id !== excludeId &&
+      startMin < getTaskEnd(t) &&
+      endMin > t.startMin
+    )
+    .sort((a, b) => a.startMin - b.startMin);
+}
+
+function findNextFreeSlot(startMin, durationMin) {
+  let candidate = startMin;
+
+  const scheduled = tasks
+    // Done tasks still block the timeline because they happened at that time.
+    .filter(t => t.status !== 'unscheduled')
+    .sort((a, b) => a.startMin - b.startMin);
+
+  let moved = true;
+  while (moved) {
+    moved = false;
+
+    for (const t of scheduled) {
+      const candidateEnd = candidate + durationMin;
+      const taskEnd = getTaskEnd(t);
+
+      if (candidate < taskEnd && candidateEnd > t.startMin) {
+        candidate = taskEnd;
+        moved = true;
+        break;
+      }
+    }
+  }
+
+  if (candidate + durationMin > DAY_END) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function addTaskFromDraft(draft) {
   if (prefillTitle) {
     tasks = tasks.filter(t => !(t.status === 'unscheduled' && t.title === prefillTitle));
   }
 
   tasks.push({
     id: taskIdCounter++,
-    title,
-    durationMin,
-    startMin,
+    title: draft.title,
+    durationMin: draft.durationMin,
+    startMin: draft.startMin,
+    priority: draft.priority || 'medium',
     status: 'planned',
     startedAt: null,
-    endedAt: null
+    endedAt: null,
+    interruptions: 0,
+    pausedMin: 0,
+    pauseStartedAt: null
   });
 
   closeModal('modal-add');
+  closeModal('modal-schedule-conflict');
+  pendingTaskDraft = null;
   renderTimeline();
+}
+
+function showScheduleConflict(draft, overlaps, suggestedStart) {
+  pendingTaskDraft = draft;
+
+  const content = document.getElementById('schedule-conflict-content');
+  const overlapList = overlaps.map(t => `
+    <div class="conflict-stat-row">
+      <span>${t.title}</span>
+      <span class="val">${formatTime(t.startMin)}–${formatTime(getTaskEnd(t))}</span>
+    </div>
+  `).join('');
+
+  const suggestionHtml = suggestedStart !== null
+    ? `<div class="suggested-slot-box">Suggested free slot: <b>${formatTime(suggestedStart)}</b> → ${formatTime(suggestedStart + draft.durationMin)}</div>`
+    : `<div class="suggested-slot-box">No free slot is available later today for a ${draft.durationMin} min task.</div>`;
+
+  const suggestionButton = suggestedStart !== null
+    ? `<button class="btn-primary" onclick="useSuggestedSlot(${suggestedStart})">Use suggested time</button>`
+    : '';
+
+  content.innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="modal-title">Time conflict</div>
+    <div class="modal-sub">${draft.title}</div>
+
+    <div class="schedule-conflict-box">
+      <div class="schedule-conflict-title">This task overlaps with your schedule.</div>
+      <div class="schedule-conflict-text">
+        You chose ${formatTime(draft.startMin)}–${formatTime(draft.startMin + draft.durationMin)}.
+      </div>
+    </div>
+
+    <div class="section-label">Conflicting task${overlaps.length > 1 ? 's' : ''}</div>
+    ${overlapList}
+
+    ${suggestionHtml}
+
+    ${suggestionButton}
+    <button class="btn-secondary" onclick="addTaskAnyway()">Add anyway</button>
+    <button class="btn-secondary" onclick="closeModal('modal-schedule-conflict')">Go back and edit</button>
+  `;
+
+  openModal('modal-schedule-conflict');
+}
+
+function useSuggestedSlot(startMin) {
+  if (!pendingTaskDraft) return;
+  pendingTaskDraft.startMin = startMin;
+  document.getElementById('input-start').value = startMin;
+  addTaskFromDraft(pendingTaskDraft);
+}
+
+function addTaskAnyway() {
+  if (!pendingTaskDraft) return;
+  addTaskFromDraft(pendingTaskDraft);
+}
+
+function saveTask() {
+  const draft = getSelectedTaskDraft();
+
+  if (!draft) {
+    alert('Give the task a name first.');
+    return;
+  }
+
+  const overlaps = findOverlappingTasks(draft.startMin, draft.durationMin);
+
+  if (overlaps.length > 0) {
+    const suggestedStart = findNextFreeSlot(draft.startMin, draft.durationMin);
+    showScheduleConflict(draft, overlaps, suggestedStart);
+    return;
+  }
+
+  addTaskFromDraft(draft);
 }
 
 /* ============================================================
@@ -907,20 +1535,29 @@ function openDetail(id) {
   let statusLine = '';
 
   if (t.status === 'planned') {
-    statusLine = `<div class="modal-sub">Scheduled ${formatTime(t.startMin)}–${formatTime(t.startMin + t.durationMin)} · not started yet</div>`;
+    statusLine = `<div class="modal-sub">Scheduled ${formatTime(t.startMin)}–${formatTime(t.startMin + t.durationMin)} · ${priorityLabel(t.priority)} priority</div>`;
     actionButtons = `
       <button class="btn-primary" onclick="startTask(${t.id})">▶ Start now</button>
       <button class="btn-secondary" onclick="markDone(${t.id})">Mark as done</button>
     `;
   } else if (t.status === 'active' || t.status === 'overrun') {
-    const elapsed = now - t.startMin;
+    const elapsed = now - t.startMin - (t.pausedMin || 0);
     const remaining = t.durationMin - elapsed;
+    const pauseText = t.interruptions ? `<div class="pause-info">Paused ${t.interruptions} time${t.interruptions>1?'s':''} · ${(t.pausedMin || 0)} min total interruption time</div>` : '';
     statusLine = t.status === 'overrun'
-      ? `<div class="modal-sub" style="color:var(--red)">⚠ Running ${elapsed - t.durationMin} min over your ${t.durationMin}m estimate</div>`
-      : `<div class="modal-sub">In progress · ${remaining} min left of your ${t.durationMin}m estimate</div>`;
+      ? `<div class="modal-sub" style="color:var(--red)">⚠ Running ${elapsed - t.durationMin} min over your ${t.durationMin}m estimate</div>${pauseText}`
+      : `<div class="modal-sub">In progress · ${remaining} min left of your ${t.durationMin}m estimate</div>${pauseText}`;
     actionButtons = `
       <button class="btn-primary" onclick="markDone(${t.id})">✓ Finish task</button>
+      <button class="btn-secondary" onclick="interruptTask(${t.id})">⏸ Interrupted</button>
       <button class="btn-secondary" onclick="extendTask(${t.id})">+ Add 30 min</button>
+    `;
+  } else if (t.status === 'paused') {
+    const pausedFor = now - (t.pauseStartedAt || now);
+    statusLine = `<div class="modal-sub" style="color:var(--accent)">⏸ Paused for ${pausedFor} min · ${t.interruptions || 1} interruption${(t.interruptions || 1)>1?'s':''}</div>`;
+    actionButtons = `
+      <button class="btn-primary" onclick="resumeTask(${t.id})">▶ Resume task</button>
+      <button class="btn-secondary" onclick="markDone(${t.id})">Actually, I'm done</button>
     `;
   } else if (t.status === 'done') {
     statusLine = `<div class="modal-sub" style="color:var(--sage)">✓ Completed</div>`;
@@ -941,6 +1578,7 @@ function startTask(id) {
   const t = tasks.find(x => x.id === id);
   t.status = 'active';
   t.startedAt = getNowMin();
+  t.pauseStartedAt = null;
   closeModal('modal-detail');
   renderTimeline();
 }
@@ -960,8 +1598,12 @@ function extendTask(id) {
 function markDone(id) {
   const t = tasks.find(x => x.id === id);
   const now = getNowMin();
-  const actualDuration = t.startedAt ? (now - t.startMin) : t.durationMin;
-  history.push({ title: t.title, planned: t.durationMin, actual: actualDuration });
+  if (t.status === 'paused' && t.pauseStartedAt) {
+    t.pausedMin = (t.pausedMin || 0) + (now - t.pauseStartedAt);
+    t.pauseStartedAt = null;
+  }
+  const actualDuration = t.startedAt ? (now - t.startMin - (t.pausedMin || 0)) : t.durationMin;
+  history.push({ title: t.title, planned: t.durationMin, actual: actualDuration, interruptions: t.interruptions || 0, pausedMin: t.pausedMin || 0, priority: t.priority || 'medium' });
   t.status = 'done';
   closeModal('modal-detail');
   closeModal('modal-conflict');
@@ -970,6 +1612,37 @@ function markDone(id) {
 
 function deleteTask(id) {
   tasks = tasks.filter(t => t.id !== id);
+  closeModal('modal-detail');
+  renderTimeline();
+}
+
+
+function priorityLabel(priority) {
+  if (priority === 'high') return 'High';
+  if (priority === 'low') return 'Low';
+  return 'Medium';
+}
+
+function interruptTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t || (t.status !== 'active' && t.status !== 'overrun')) return;
+  t.status = 'paused';
+  t.interruptions = (t.interruptions || 0) + 1;
+  t.pauseStartedAt = getNowMin();
+  closeModal('modal-detail');
+  renderTimeline();
+}
+
+function resumeTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t || t.status !== 'paused') return;
+  const now = getNowMin();
+  if (t.pauseStartedAt) {
+    t.pausedMin = (t.pausedMin || 0) + (now - t.pauseStartedAt);
+  }
+  t.pauseStartedAt = null;
+  const elapsed = now - t.startMin - (t.pausedMin || 0);
+  t.status = elapsed > t.durationMin ? 'overrun' : 'active';
   closeModal('modal-detail');
   renderTimeline();
 }
@@ -1012,6 +1685,7 @@ function showConflictIfAny() {
 function showSummary() {
   document.getElementById('tab-summary').classList.add('active');
   document.getElementById('tab-today').classList.remove('active');
+  updateFabVisibility();
 
   const done = tasks.filter(t => t.status === 'done').length;
   const overrun = history.filter(h => h.actual > h.planned).length;
@@ -1025,13 +1699,30 @@ function showSummary() {
     <div class="stat-card"><div class="stat-num" style="color:var(--text-dim)">${planned}</div><div class="stat-label">Upcoming</div></div>
   `;
 
+  const totalInterruptions = history.reduce((s,h) => s + (h.interruptions || 0), 0) + tasks.filter(t => t.status === 'paused').length;
+  const totalPaused = history.reduce((s,h) => s + (h.pausedMin || 0), 0) + tasks.filter(t => t.status === 'paused').reduce((s,t) => s + (getNowMin() - (t.pauseStartedAt || getNowMin())), 0);
+  const highTotal = tasks.filter(t => (t.priority || 'medium') === 'high').length + history.filter(h => h.priority === 'high').length;
+  const highDone = history.filter(h => h.priority === 'high').length + tasks.filter(t => t.status === 'done' && (t.priority || 'medium') === 'high').length;
+
+  document.getElementById('interruption-summary').innerHTML = `
+    <div class="mini-stat-card">
+      <div class="mini-stat-value">${totalInterruptions}</div>
+      <div class="mini-stat-label">Interruptions</div>
+    </div>
+    <div class="mini-stat-card">
+      <div class="mini-stat-value">${totalPaused}m</div>
+      <div class="mini-stat-label">Paused time</div>
+    </div>
+  `;
+
   const histHtml = history.length === 0
     ? `<div class="field-hint">No completed tasks yet today. Finish a task to see how your estimate compared to reality.</div>`
     : history.map(h => {
         const delta = h.actual - h.planned;
         const cls = delta > 0 ? 'over' : (delta < 0 ? 'under' : '');
         const sign = delta > 0 ? '+' : '';
-        return `<div class="history-row"><span class="name">${h.title}</span><span class="delta ${cls}">${sign}${delta} min</span></div>`;
+        const pauseNote = h.interruptions ? ` · ${h.interruptions} pause${h.interruptions>1?'s':''}` : '';
+        return `<div class="history-row"><span class="name">${h.title}<span style="color:var(--text-faint);font-size:12px">${pauseNote}</span></span><span class="delta ${cls}">${sign}${delta} min</span></div>`;
       }).join('');
   document.getElementById('summary-history').innerHTML = histHtml;
 
@@ -1057,16 +1748,42 @@ function showSummary() {
 function showScreen(name) {
   document.getElementById('tab-today').classList.add('active');
   document.getElementById('tab-summary').classList.remove('active');
+  updateFabVisibility();
+  closeModal('modal-summary');
+}
+
+function closeSummary() {
+  closeModal('modal-summary');
+  document.getElementById('tab-today').classList.add('active');
+  document.getElementById('tab-summary').classList.remove('active');
+  updateFabVisibility();
 }
 
 /* ============================================================
    MODAL HELPERS
    ============================================================ */
+function updateFabVisibility() {
+  const fab = document.getElementById('fab-add');
+  if (!fab) return;
+
+  const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay'))
+    .some(m => m.classList.contains('active'));
+
+  if (anyModalOpen) {
+    fab.classList.add('hidden');
+  } else {
+    fab.classList.remove('hidden');
+  }
+}
+
 function openModal(id) {
   document.getElementById(id).classList.add('active');
+  updateFabVisibility();
 }
+
 function closeModal(id) {
   document.getElementById(id).classList.remove('active');
+  updateFabVisibility();
 }
 
 /* ============================================================
