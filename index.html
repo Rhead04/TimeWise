@@ -294,9 +294,9 @@
   }
 
   .task-block.active {
-    background: linear-gradient(180deg, rgba(245,158,11,0.22), rgba(245,158,11,0.10));
+    background: linear-gradient(180deg, rgba(245,158,11,0.24), rgba(245,158,11,0.12));
     border: 1px solid rgba(245,158,11,0.72);
-    box-shadow: 0 14px 34px rgba(245,158,11,0.16), 0 0 0 1px rgba(245,158,11,0.18) inset;
+    box-shadow: 0 12px 32px rgba(245,158,11,0.18);
   }
   .task-block.active::before { background: var(--accent); }
 
@@ -924,6 +924,294 @@
     color: #FFE082;
   }
 
+
+  /* ---- Focus mode + reminders + overload additions ---- */
+  .focus-sheet { min-height: 78vh; }
+
+  .focus-title {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.06;
+    margin-bottom: 8px;
+  }
+
+  .focus-countdown {
+    margin-top: 14px;
+    font-size: 44px;
+    font-weight: 950;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+
+  .focus-subline {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 750;
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .focus-progress {
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin: 24px 0 22px;
+  }
+
+  .focus-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #F59E0B, #FFE082);
+    transition: width .25s ease;
+  }
+
+  .task-countdown-line {
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .upcoming-banner {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(106px + env(safe-area-inset-bottom));
+    max-width: 388px;
+    margin: 0 auto;
+    z-index: 45;
+    background: rgba(24,28,34,0.96);
+    border: 1px solid rgba(245,158,11,0.35);
+    border-radius: 22px;
+    padding: 14px 14px;
+    box-shadow: 0 18px 45px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.05) inset;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: none;
+  }
+
+  .upcoming-banner.active { display: block; }
+
+  .upcoming-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .upcoming-text {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.35;
+  }
+
+  .upcoming-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .tiny-btn {
+    flex: 1;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 9px 10px;
+    font-size: 12px;
+    font-weight: 850;
+    cursor: pointer;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-dim);
+  }
+
+  .tiny-btn.primary {
+    background: var(--accent);
+    color: #0B0D10;
+    border-color: var(--accent);
+  }
+
+  .overload-box {
+    background: rgba(239,68,68,0.13);
+    border: 1px solid rgba(239,68,68,0.38);
+    border-radius: 18px;
+    padding: 16px;
+    margin: 18px 0;
+  }
+
+  .overload-box b { color: #FFB4B4; }
+
+  .automove-box {
+    background: rgba(96,165,250,0.12);
+    border: 1px solid rgba(96,165,250,0.34);
+    border-radius: 16px;
+    padding: 14px;
+    margin: 14px 0;
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+
+  /* ---- Inline Focus Mode on Today ---- */
+  body.focus-active .task-block:not(.focus-current) {
+    opacity: 0.35;
+    filter: saturate(0.7);
+    transition: opacity .22s ease, filter .22s ease;
+  }
+
+  body.focus-active .task-block.focus-current {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: scale(1.012);
+    border-color: rgba(245,158,11,0.90) !important;
+    box-shadow:
+      0 0 0 1px rgba(245,158,11,0.38) inset,
+      0 0 28px rgba(245,158,11,0.28),
+      0 14px 38px rgba(245,158,11,0.18);
+    z-index: 120;
+    animation: focusSoftGlow 2.4s ease-in-out infinite;
+  }
+
+  body.focus-active .task-block.focus-current::before {
+    background: var(--accent);
+    box-shadow: 0 0 16px rgba(245,158,11,0.75);
+  }
+
+  @keyframes focusSoftGlow {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px rgba(245,158,11,0.34) inset,
+        0 0 24px rgba(245,158,11,0.22),
+        0 14px 34px rgba(245,158,11,0.14);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px rgba(245,158,11,0.52) inset,
+        0 0 40px rgba(245,158,11,0.34),
+        0 18px 46px rgba(245,158,11,0.22);
+    }
+  }
+
+  .focus-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .focus-pill::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(245,158,11,0.75);
+  }
+
+
+  /* ---- Final focus override: current task must stay bright ---- */
+  body.focus-active .task-block {
+    transition: opacity .22s ease, filter .22s ease, transform .22s ease, box-shadow .22s ease;
+  }
+
+  body.focus-active .task-block:not(.focus-current) {
+    opacity: 0.42 !important;
+    filter: saturate(0.75) brightness(0.82) !important;
+  }
+
+  body.focus-active .task-block.focus-current,
+  body.focus-active .task-block.focus-current.active,
+  body.focus-active .task-block.focus-current.overrun,
+  body.focus-active .task-block.focus-current.paused {
+    opacity: 1 !important;
+    filter: none !important;
+    background: linear-gradient(180deg, rgba(245,158,11,0.28), rgba(245,158,11,0.14)) !important;
+    border: 1px solid rgba(245,158,11,0.95) !important;
+    color: var(--text) !important;
+    transform: scale(1.018);
+    z-index: 999 !important;
+    box-shadow:
+      0 0 0 1px rgba(245,158,11,0.48) inset,
+      0 0 42px rgba(245,158,11,0.42),
+      0 18px 48px rgba(245,158,11,0.28) !important;
+  }
+
+  body.focus-active .task-block.focus-current .task-title,
+  body.focus-active .task-block.focus-current .task-time,
+  body.focus-active .task-block.focus-current .task-countdown-line,
+  body.focus-active .task-block.focus-current .focus-pill,
+  body.focus-active .task-block.focus-current .task-meta {
+    opacity: 1 !important;
+    color: var(--text) !important;
+    filter: none !important;
+  }
+
+  body.focus-active .task-block.focus-current .task-countdown-line,
+  body.focus-active .task-block.focus-current .focus-pill {
+    color: #FFE082 !important;
+  }
+
+  body.focus-active .task-block.focus-current::before {
+    background: var(--accent) !important;
+    opacity: 1 !important;
+    box-shadow: 0 0 18px rgba(245,158,11,0.85);
+  }
+
+
+  /* ---- Compact task blocks for short tasks ---- */
+  .task-block.compact {
+    padding: 8px 12px 7px 16px !important;
+    min-height: 44px !important;
+    gap: 1px;
+  }
+
+  .task-block.compact .task-title {
+    font-size: 13px !important;
+    line-height: 1.1;
+  }
+
+  .task-block.compact .task-time {
+    font-size: 10px !important;
+    margin-top: 1px;
+    line-height: 1.1;
+  }
+
+  .task-block.compact .task-meta,
+  .task-block.compact .focus-pill {
+    display: none !important;
+  }
+
+  .task-block.compact::before {
+    top: 8px;
+    bottom: 8px;
+  }
+
+
+  /* ---- Softer Needs scheduling style ---- */
+  .unscheduled-item {
+    border-color: rgba(245,158,11,0.38) !important;
+    background: rgba(245,158,11,0.08) !important;
+  }
+
+  .risk-dot {
+    background: var(--accent) !important;
+    box-shadow: 0 0 8px rgba(245,158,11,0.55) !important;
+  }
+
+  .unscheduled .section-label {
+    color: var(--accent) !important;
+  }
+
 </style>
 </head>
 <body>
@@ -945,13 +1233,15 @@
     <div class="timeline" id="timeline"></div>
 
     <div class="unscheduled" id="unscheduled-section" style="display:none;">
-      <div class="section-label">⚠ Needs a time estimate</div>
+      <div class="section-label">⚠ Needs scheduling</div>
       <div id="unscheduled-list"></div>
     </div>
   </div>
 
   <button class="fab" id="fab-add" onclick="openAddTask()" aria-label="Add task"><span class="plus-mark">+</span></button>
   <button class="demo-fast-forward" onclick="simulateTimePassing(30)" title="Demo only: fast-forward 30 min">Demo +30m</button>
+
+  <div class="upcoming-banner" id="upcoming-banner"></div>
 
   <div class="nav-tabs">
     <div class="nav-tab active" id="tab-today" onclick="showScreen('today')">
@@ -1001,6 +1291,7 @@
         <label class="field-label">Start time</label>
         <select id="input-start">
         </select>
+        <div class="field-hint">Choose “No time yet” to keep it in Needs scheduling.</div>
       </div>
 
       <button class="btn-primary" onclick="saveTask()">Add to today</button>
@@ -1009,6 +1300,11 @@
   </div>
 
 
+  <!-- ============ MODAL: OVERLOADED DAY ============ -->
+  <div class="modal-overlay" id="modal-overload">
+    <div class="modal-sheet" id="overload-content"></div>
+  </div>
+
   <!-- ============ MODAL: SCHEDULE CONFLICT ============ -->
   <div class="modal-overlay" id="modal-schedule-conflict">
     <div class="modal-sheet" id="schedule-conflict-content">
@@ -1016,11 +1312,21 @@
     </div>
   </div>
 
+  <!-- ============ MODAL: FOCUS MODE ============ -->
+  <div class="modal-overlay" id="modal-focus">
+    <div class="modal-sheet focus-sheet" id="focus-content"></div>
+  </div>
+
   <!-- ============ MODAL: TASK DETAIL / START-STOP ============ -->
   <div class="modal-overlay" id="modal-detail">
     <div class="modal-sheet" id="detail-content">
       <!-- filled by JS -->
     </div>
+  </div>
+
+  <!-- ============ MODAL: AUTO MOVE SUGGESTION ============ -->
+  <div class="modal-overlay" id="modal-automove">
+    <div class="modal-sheet" id="automove-content"></div>
   </div>
 
   <!-- ============ MODAL: OVERRUN CONFLICT ============ -->
@@ -1059,45 +1365,25 @@ let history = []; // {title, planned, actual, interruptions, pausedMin, priority
 let taskIdCounter = 1;
 let nowOffsetMin = 0; // for demo: lets us simulate time passing
 
+const DEMO_MODE = true; // true for presentation demo data, false for empty first-use app
+
 const DAY_START = 7 * 60;  // 07:00
 const DAY_END = 22 * 60;   // 22:00
+const REMINDER_WINDOW_MIN = 15;
 
 /* ============================================================
    SEED DATA — mirrors the storyboard scenario
    ============================================================ */
 function seedDemoData() {
-  // Lightweight demo data for user testing:
-  // enough to test timeline + conflict detection, but not overloaded.
+  const now = getNowMin();
   tasks = [
-    {
-      id: 1,
-      title: '📘 HCI Lecture',
-      durationMin: 120,
-      startMin: 9 * 60,
-      priority: 'medium',
-      status: 'planned',
-      startedAt: null,
-      endedAt: null,
-      interruptions: 0,
-      pausedMin: 0,
-      pauseStartedAt: null
-    },
-    {
-      id: 2,
-      title: '💻 Programming lab assignment',
-      durationMin: 120,
-      startMin: 14 * 60,
-      priority: 'high',
-      status: 'planned',
-      startedAt: null,
-      endedAt: null,
-      interruptions: 0,
-      pausedMin: 0,
-      pauseStartedAt: null
-    }
+    { id: 1, title: '📘 HCI Lecture', durationMin: 120, startMin: 9 * 60, priority: 'medium', status: 'done', startedAt: null, endedAt: null, interruptions: 0, pausedMin: 0, pauseStartedAt: null },
+    { id: 2, title: '💻 Programming lab assignment', durationMin: 120, startMin: 14 * 60, priority: 'high', status: 'planned', startedAt: null, endedAt: null, interruptions: 0, pausedMin: 0, pauseStartedAt: null },
+    { id: 3, title: '👥 Team meeting', durationMin: 60, startMin: 19 * 60, priority: 'medium', status: 'planned', startedAt: null, endedAt: null, interruptions: 0, pausedMin: 0, pauseStartedAt: null },
   ];
-
-  taskIdCounter = 3;
+  taskIdCounter = 4;
+  // unscheduled
+  tasks.push({ id: 0, title: 'Read lecture notes', durationMin: null, startMin: null, priority: 'low', status: 'unscheduled', interruptions: 0, pausedMin: 0, pauseStartedAt: null });
 }
 
 function getNowMin() {
@@ -1108,7 +1394,7 @@ function getNowMin() {
 /* ============================================================
    NON-LINEAR TIME SCALE — compresses empty hours, expands busy ones
    ============================================================ */
-const HOUR_FULL_PX = 84;   // height for an hour that contains a task
+const HOUR_FULL_PX = 108;   // height for an hour that contains a task
 const HOUR_EMPTY_PX = 26;  // height for an hour with nothing scheduled
 
 function hourHasTask(hourStart) {
@@ -1227,17 +1513,26 @@ function renderTimeline() {
     const topY = minuteToY(t.startMin);
     const bottomY = minuteToY(t.startMin + effectiveDuration);
 
-    const rawHeight = Math.max(bottomY - topY - 8, 60);
-    block.className = cls + (rawHeight < 74 ? ' compact' : '');
+    const rawHeight = Math.max(bottomY - topY - 8, 44);
+    const focusClass = (t.status === 'active' || t.status === 'overrun' || t.status === 'paused') ? ' focus-current' : '';
+    block.className = cls + focusClass + (rawHeight < 76 ? ' compact' : '');
     block.style.top = (topY + 4) + 'px';
     block.style.height = rawHeight + 'px';
     block.onclick = () => openDetail(t.id);
     block.setAttribute('aria-label', `${t.title}, ${formatTime(t.startMin)} to ${formatTime(t.startMin + t.durationMin)}`);
 
     const displayStatus = cls.includes('overrun') ? 'Overrun' : (t.status === 'paused' ? 'Paused' : (t.status === 'active' ? 'Running' : (t.status === 'done' ? 'Done' : 'Planned')));
+    const isCurrentFocus = (t.status === 'active' || t.status === 'overrun' || t.status === 'paused');
+    const remaining = isCurrentFocus ? taskRemainingMin(t) : null;
+    const countdownLine = isCurrentFocus
+      ? `<div class="task-countdown-line">${t.status === 'paused' ? 'Paused · ' : ''}${remaining > 0 ? formatDuration(remaining) + ' left' : formatDuration(Math.abs(remaining)) + ' over'}</div>`
+      : '';
+    const focusLine = isCurrentFocus ? `<div class="focus-pill">Focus</div>` : '';
     block.innerHTML = `
       <div class="task-title"><span class="task-priority-dot priority-${t.priority || 'medium'}"></span>${t.title}</div>
       <div class="task-time">${formatTime(t.startMin)}–${formatTime(t.startMin + t.durationMin)}</div>
+      ${countdownLine}
+      ${focusLine}
       <div class="task-meta">${displayStatus}</div>
     `;
     container.appendChild(block);
@@ -1250,11 +1545,11 @@ function renderTimeline() {
   if (unsched.length > 0) {
     section.style.display = 'block';
     list.innerHTML = unsched.map(t => `
-      <div class="unscheduled-item" onclick="openAddTask('${t.title}')">
+      <div class="unscheduled-item" onclick="scheduleUnscheduledTask(${t.id})">
         <span class="risk-dot"></span>
         <div>
           <div class="unscheduled-title">${t.title}</div>
-          <div class="unscheduled-sub">No time blocked — tap to estimate &amp; schedule</div>
+          <div class="unscheduled-sub">${t.durationMin ? 'Estimated ' + formatDuration(t.durationMin) + ' — ' : ''}No start time — tap to schedule</div>
         </div>
       </div>
     `).join('');
@@ -1264,6 +1559,47 @@ function renderTimeline() {
 
   updateDayStats();
   checkForOverruns();
+  updateInlineFocusMode();
+}
+
+
+
+function isFocusActive() {
+  return tasks.some(t => t.status === 'active' || t.status === 'overrun' || t.status === 'paused');
+}
+
+function updateInlineFocusMode() {
+  document.body.classList.toggle('focus-active', isFocusActive());
+}
+
+function formatDuration(min) {
+  min = Math.max(0, Math.round(min));
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+function activeTask() {
+  return tasks.find(t => t.status === 'active' || t.status === 'overrun' || t.status === 'paused') || null;
+}
+
+function taskElapsedMin(t) {
+  const now = getNowMin();
+  const currentPause = t.status === 'paused' && t.pauseStartedAt ? now - t.pauseStartedAt : 0;
+  return Math.max(0, now - t.startMin - (t.pausedMin || 0) - currentPause);
+}
+
+function taskRemainingMin(t) {
+  return t.durationMin - taskElapsedMin(t);
+}
+
+function scheduledLoadPercent(extraDraft = null) {
+  const scheduled = tasks.filter(t => t.status !== 'unscheduled');
+  let total = scheduled.reduce((s, t) => s + (t.durationMin || 0), 0);
+  if (extraDraft && !extraDraft.noTimeYet) total += extraDraft.durationMin || 0;
+  return Math.round((total / (DAY_END - DAY_START)) * 100);
 }
 
 function formatHour(h) {
@@ -1311,6 +1647,26 @@ function findNextTaskConflict(task) {
 let prefillTitle = null;
 let pendingTaskDraft = null;
 
+
+function scheduleUnscheduledTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+
+  prefillTitle = t.title;
+  document.getElementById('input-title').value = t.title;
+  populateStartTimes();
+
+  document.querySelectorAll('.duration-chip').forEach(c => c.classList.remove('selected'));
+  const durationChip = document.querySelector(`.duration-chip[data-min="${t.durationMin || 60}"]`) || document.querySelector('.duration-chip[data-min="60"]');
+  if (durationChip) durationChip.classList.add('selected');
+
+  document.querySelectorAll('.priority-chip').forEach(c => c.classList.remove('selected'));
+  const priorityChip = document.querySelector(`.priority-chip[data-priority="${t.priority || 'medium'}"]`) || document.querySelector('.priority-chip[data-priority="medium"]');
+  if (priorityChip) priorityChip.classList.add('selected');
+
+  openModal('modal-add');
+}
+
 function openAddTask(prefill) {
   prefillTitle = prefill || null;
   document.getElementById('input-title').value = prefill || '';
@@ -1325,6 +1681,12 @@ function openAddTask(prefill) {
 function populateStartTimes() {
   const sel = document.getElementById('input-start');
   sel.innerHTML = '';
+
+  const noTimeOpt = document.createElement('option');
+  noTimeOpt.value = 'no-time';
+  noTimeOpt.textContent = 'No time yet';
+  sel.appendChild(noTimeOpt);
+
   const now = getNowMin();
   for (let m = DAY_START; m <= DAY_END; m += 30) {
     const opt = document.createElement('option');
@@ -1333,8 +1695,8 @@ function populateStartTimes() {
     if (m >= now && !opt.selected && sel.options.length === 0) opt.selected = true;
     sel.appendChild(opt);
   }
-  // select nearest future slot
-  let nearest = [...sel.options].find(o => parseInt(o.value) >= now) || sel.options[0];
+  // select nearest future slot by default, while keeping "No time yet" available
+  let nearest = [...sel.options].find(o => o.value !== 'no-time' && parseInt(o.value) >= now) || sel.options[1] || sel.options[0];
   sel.value = nearest.value;
 }
 
@@ -1363,11 +1725,13 @@ function getSelectedTaskDraft() {
   if (!title) return null;
 
   const durationMin = parseInt(document.querySelector('.duration-chip.selected').dataset.min);
-  const startMin = parseInt(document.getElementById('input-start').value);
+  const startRaw = document.getElementById('input-start').value;
+  const startMin = startRaw === 'no-time' ? null : parseInt(startRaw);
   const priorityEl = document.querySelector('.priority-chip.selected');
   const priority = priorityEl ? priorityEl.dataset.priority : 'medium';
+  const noTimeYet = startRaw === 'no-time';
 
-  return { title, durationMin, startMin, priority };
+  return { title, durationMin, startMin, priority, noTimeYet };
 }
 
 function getTaskEnd(task) {
@@ -1420,6 +1784,31 @@ function findNextFreeSlot(startMin, durationMin) {
   return candidate;
 }
 
+
+function addUnscheduledFromDraft(draft) {
+  if (prefillTitle) {
+    tasks = tasks.filter(t => !(t.status === 'unscheduled' && t.title === prefillTitle));
+  }
+
+  tasks.push({
+    id: taskIdCounter++,
+    title: draft.title,
+    durationMin: draft.durationMin,
+    startMin: null,
+    priority: draft.priority || 'medium',
+    status: 'unscheduled',
+    startedAt: null,
+    endedAt: null,
+    interruptions: 0,
+    pausedMin: 0,
+    pauseStartedAt: null
+  });
+
+  closeModal('modal-add');
+  pendingTaskDraft = null;
+  renderTimeline();
+}
+
 function addTaskFromDraft(draft) {
   if (prefillTitle) {
     tasks = tasks.filter(t => !(t.status === 'unscheduled' && t.title === prefillTitle));
@@ -1443,6 +1832,161 @@ function addTaskFromDraft(draft) {
   closeModal('modal-schedule-conflict');
   pendingTaskDraft = null;
   renderTimeline();
+  updateInlineFocusMode();
+}
+
+
+function showOverloadWarning(draft, load) {
+  pendingTaskDraft = draft;
+  const content = document.getElementById('overload-content');
+  content.innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="modal-title">Overloaded day</div>
+    <div class="modal-sub">${draft.title}</div>
+    <div class="overload-box">
+      <div class="schedule-conflict-title">Your schedule would become <b>${load}% full</b>.</div>
+      <div class="schedule-conflict-text">Consider shortening the task or moving it to another day.</div>
+    </div>
+    <button class="btn-primary" onclick="confirmOverloadAndAdd()">Add anyway</button>
+    <button class="btn-secondary" onclick="closeModal('modal-overload')">Go back and edit</button>
+  `;
+  openModal('modal-overload');
+}
+
+function confirmOverloadAndAdd() {
+  if (!pendingTaskDraft) return;
+  pendingTaskDraft._overloadConfirmed = true;
+  closeModal('modal-overload');
+
+  const overlaps = findOverlappingTasks(pendingTaskDraft.startMin, pendingTaskDraft.durationMin);
+  if (overlaps.length > 0) {
+    const suggestedStart = findNextFreeSlot(pendingTaskDraft.startMin, pendingTaskDraft.durationMin);
+    showScheduleConflict(pendingTaskDraft, overlaps, suggestedStart);
+    return;
+  }
+  addTaskFromDraft(pendingTaskDraft);
+}
+
+function openFocusMode(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const remaining = taskRemainingMin(t);
+  const elapsed = taskElapsedMin(t);
+  const pct = Math.max(0, Math.min(100, (elapsed / t.durationMin) * 100));
+  const over = remaining < 0;
+
+  document.getElementById('focus-content').innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="focus-title">${t.title}</div>
+    <div class="modal-sub">${priorityLabel(t.priority)} priority · ${formatTime(t.startMin)}–${formatTime(t.startMin + t.durationMin)}</div>
+    <div class="focus-countdown" style="${over ? 'color:var(--red)' : ''}">
+      ${over ? formatDuration(Math.abs(remaining)) + ' over' : formatDuration(remaining) + ' left'}
+    </div>
+    <div class="focus-subline">${t.status === 'paused' ? 'Paused' : 'Focus mode'} · planned ${formatDuration(t.durationMin)}</div>
+    <div class="focus-progress"><div class="focus-progress-fill" style="width:${pct}%"></div></div>
+    ${t.interruptions ? `<div class="pause-info">Paused ${t.interruptions} time${t.interruptions>1?'s':''} · ${(t.pausedMin || 0)} min interruption time</div>` : ''}
+    ${t.status === 'paused'
+      ? `<button class="btn-primary" onclick="resumeTask(${t.id}); openFocusMode(${t.id});">▶ Resume</button>`
+      : `<button class="btn-primary" onclick="markDone(${t.id})">✓ Finish task</button>
+         <button class="btn-secondary" onclick="interruptTask(${t.id}); openFocusMode(${t.id});">⏸ Pause / Interrupted</button>
+         <button class="btn-secondary" onclick="extendTask(${t.id}); openFocusMode(${t.id});">+ Add 30 min</button>`
+    }
+    <button class="btn-secondary" onclick="closeModal('modal-focus')">Back to timeline</button>
+  `;
+
+  closeModal('modal-detail');
+  openModal('modal-focus');
+}
+
+function refreshFocusModeIfOpen() {
+  // Inline focus mode lives on the Today timeline, so there is no modal to refresh.
+}
+
+let dismissedReminderTaskId = null;
+
+function showUpcomingReminderIfNeeded() {
+  const banner = document.getElementById('upcoming-banner');
+  if (!banner) return;
+
+  const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(m => m.classList.contains('active'));
+  if (anyModalOpen) {
+    banner.classList.remove('active');
+    return;
+  }
+
+  const now = getNowMin();
+  const running = activeTask();
+  const next = tasks
+    .filter(t => t.status === 'planned' && t.startMin > now && t.startMin - now <= REMINDER_WINDOW_MIN && t.id !== dismissedReminderTaskId)
+    .sort((a,b) => a.startMin - b.startMin)[0];
+
+  if (!next) {
+    banner.classList.remove('active');
+    return;
+  }
+
+  const startsIn = next.startMin - now;
+  const conflictText = running ? `<br><b>${running.title}</b> is still ${running.status === 'paused' ? 'paused' : 'running'}.` : '';
+
+  banner.innerHTML = `
+    <div class="upcoming-title">⏰ ${next.title} starts in ${formatDuration(startsIn)}</div>
+    <div class="upcoming-text">${formatTime(next.startMin)}–${formatTime(next.startMin + next.durationMin)}${conflictText}</div>
+    <div class="upcoming-actions">
+      <button class="tiny-btn primary" onclick="startTask(${next.id})">Start now</button>
+      <button class="tiny-btn" onclick="dismissUpcoming(${next.id})">Dismiss</button>
+    </div>
+  `;
+  banner.classList.add('active');
+}
+
+function dismissUpcoming(id) {
+  dismissedReminderTaskId = id;
+  hideUpcomingReminder();
+}
+
+let pendingAutoMove = null;
+
+function findAutoMoveSuggestion(finishedTask, actualEnd) {
+  const plannedEnd = finishedTask.startMin + finishedTask.durationMin;
+  const delay = actualEnd - plannedEnd;
+  if (delay <= 0) return null;
+
+  const next = tasks
+    .filter(t => t.status === 'planned' && t.startMin >= plannedEnd)
+    .sort((a,b) => a.startMin - b.startMin)[0];
+
+  if (!next) return null;
+
+  const newStart = next.startMin + delay;
+  if (newStart + next.durationMin > DAY_END) return null;
+  return { task: next, delay, newStart };
+}
+
+function showAutoMoveSuggestion(suggestion) {
+  pendingAutoMove = suggestion;
+  const content = document.getElementById('automove-content');
+  content.innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="modal-title">Adjust schedule?</div>
+    <div class="modal-sub">${suggestion.task.title}</div>
+    <div class="automove-box">
+      Previous task finished ${formatDuration(suggestion.delay)} later than planned.<br>
+      Move <b>${suggestion.task.title}</b> from ${formatTime(suggestion.task.startMin)}
+      to <b>${formatTime(suggestion.newStart)}</b>?
+    </div>
+    <button class="btn-primary" onclick="applyAutoMove()">Move task</button>
+    <button class="btn-secondary" onclick="closeModal('modal-automove')">Keep schedule</button>
+  `;
+  openModal('modal-automove');
+}
+
+function applyAutoMove() {
+  if (!pendingAutoMove) return;
+  pendingAutoMove.task.startMin = pendingAutoMove.newStart;
+  pendingAutoMove = null;
+  closeModal('modal-automove');
+  renderTimeline();
+  updateInlineFocusMode();
 }
 
 function showScheduleConflict(draft, overlaps, suggestedStart) {
@@ -1506,6 +2050,17 @@ function saveTask() {
 
   if (!draft) {
     alert('Give the task a name first.');
+    return;
+  }
+
+  if (draft.noTimeYet) {
+    addUnscheduledFromDraft(draft);
+    return;
+  }
+
+  const load = scheduledLoadPercent(draft);
+  if (load > 100 && !draft._overloadConfirmed) {
+    showOverloadWarning(draft, load);
     return;
   }
 
@@ -1574,13 +2129,58 @@ function openDetail(id) {
   openModal('modal-detail');
 }
 
+
+function stopOtherActiveTasks(newTaskId) {
+  const now = getNowMin();
+
+  tasks.forEach(t => {
+    if (t.id !== newTaskId && (t.status === 'active' || t.status === 'overrun' || t.status === 'paused')) {
+      if (t.status === 'paused' && t.pauseStartedAt) {
+        t.pausedMin = (t.pausedMin || 0) + (now - t.pauseStartedAt);
+        t.pauseStartedAt = null;
+      }
+
+      const actualDuration = t.startedAt ? Math.max(0, now - t.startMin - (t.pausedMin || 0)) : t.durationMin;
+      history.push({
+        title: t.title,
+        planned: t.durationMin,
+        actual: actualDuration,
+        interruptions: t.interruptions || 0,
+        pausedMin: t.pausedMin || 0,
+        priority: t.priority || 'medium'
+      });
+
+      t.status = 'done';
+      t.endedAt = now;
+    }
+  });
+}
+
+function hideUpcomingReminder() {
+  const banner = document.getElementById('upcoming-banner');
+  if (banner) {
+    banner.classList.remove('active');
+    banner.innerHTML = '';
+  }
+}
+
 function startTask(id) {
+  stopOtherActiveTasks(id);
+
   const t = tasks.find(x => x.id === id);
+  if (!t) return;
+
   t.status = 'active';
   t.startedAt = getNowMin();
   t.pauseStartedAt = null;
+  t._alerted = false;
+
+  dismissedReminderTaskId = id;
+  hideUpcomingReminder();
+
   closeModal('modal-detail');
   renderTimeline();
+  updateInlineFocusMode();
 }
 
 function extendTask(id) {
@@ -1593,6 +2193,7 @@ function extendTask(id) {
   closeModal('modal-detail');
   closeModal('modal-conflict');
   renderTimeline();
+  updateInlineFocusMode();
 }
 
 function markDone(id) {
@@ -1605,15 +2206,19 @@ function markDone(id) {
   const actualDuration = t.startedAt ? (now - t.startMin - (t.pausedMin || 0)) : t.durationMin;
   history.push({ title: t.title, planned: t.durationMin, actual: actualDuration, interruptions: t.interruptions || 0, pausedMin: t.pausedMin || 0, priority: t.priority || 'medium' });
   t.status = 'done';
+  const suggestion = findAutoMoveSuggestion(t, now);
   closeModal('modal-detail');
+  closeModal('modal-focus');
   closeModal('modal-conflict');
   renderTimeline();
+  if (suggestion) showAutoMoveSuggestion(suggestion);
 }
 
 function deleteTask(id) {
   tasks = tasks.filter(t => t.id !== id);
   closeModal('modal-detail');
   renderTimeline();
+  updateInlineFocusMode();
 }
 
 
@@ -1789,9 +2394,38 @@ function closeModal(id) {
 /* ============================================================
    INIT + LIVE CLOCK SIMULATION
    ============================================================ */
+
+let lastRenderedMinute = null;
+
+function tickApp() {
+  const now = getNowMin();
+  const currentMinute = Math.floor(now);
+
+  if (lastRenderedMinute !== currentMinute) {
+    lastRenderedMinute = currentMinute;
+    renderTimeline();
+  } else {
+    checkForOverruns();
+  }
+
+  const justOverran = tasks.find(t => t.status === 'overrun' && !t._alerted);
+  if (justOverran) {
+    justOverran._alerted = true;
+    showConflictIfAny();
+  }
+
+  showUpcomingReminderIfNeeded();
+  refreshFocusModeIfOpen();
+}
+
 function init() {
   document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  seedDemoData();
+  if (DEMO_MODE) {
+    seedDemoData();
+  } else {
+    tasks = [];
+    taskIdCounter = 1;
+  }
   renderTimeline();
 
   // wait for layout to settle before measuring/scrolling — fixes race condition
@@ -1799,15 +2433,8 @@ function init() {
     requestAnimationFrame(scrollToNow);
   });
 
-  // keep the timeline in sync with the real clock (no artificial speed-up)
-  setInterval(() => {
-    renderTimeline();
-    const justOverran = tasks.find(t => t.status === 'overrun' && !t._alerted);
-    if (justOverran) {
-      justOverran._alerted = true;
-      showConflictIfAny();
-    }
-  }, 10000); // refresh every 10s — enough to catch real elapsed time without being wasteful
+  // keep the app in sync without redrawing more than needed
+  setInterval(tickApp, 10000);
 }
 
 // Optional: call this from the console or a debug button to fast-forward time for demos
@@ -1819,6 +2446,8 @@ function simulateTimePassing(minutes = 1) {
     justOverran._alerted = true;
     showConflictIfAny();
   }
+  showUpcomingReminderIfNeeded();
+  refreshFocusModeIfOpen();
 }
 
 function scrollToNow() {
